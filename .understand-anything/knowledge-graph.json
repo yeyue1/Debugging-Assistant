@@ -1,0 +1,2364 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "serial_prot",
+    "languages": [
+      "C++",
+      "C",
+      "Qt UI",
+      "Markdown"
+    ],
+    "frameworks": [
+      "Qt 6",
+      "Qt Widgets",
+      "Qt SerialPort",
+      "Qt Network"
+    ],
+    "description": "A Qt Widgets-based communication debugging tool supporting serial and network debugging with protocol parsing, auto-reply, and send queue features",
+    "analyzedAt": "2026-05-29T10:49:26.556Z",
+    "gitCommitHash": "d8ac532f569e733a133e68af59976e8e47865d4b"
+  },
+  "nodes": [
+    {
+      "id": "file:main.cpp",
+      "type": "file",
+      "name": "main.cpp",
+      "filePath": "main.cpp",
+      "summary": "Application entry point, creates QApplication and shows MainWindow",
+      "tags": [
+        "entry-point",
+        "qt"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:mainwindow.h",
+      "type": "file",
+      "name": "mainwindow.h",
+      "filePath": "mainwindow.h",
+      "summary": "MainWindow header - top-level QMainWindow managing tabbed serial/network panels",
+      "tags": [
+        "ui",
+        "mainwindow",
+        "header"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:mainwindow.cpp",
+      "type": "file",
+      "name": "mainwindow.cpp",
+      "filePath": "mainwindow.cpp",
+      "summary": "MainWindow implementation - tab management, settings persistence, theme switching",
+      "tags": [
+        "ui",
+        "mainwindow",
+        "implementation"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:mainwindow.ui",
+      "type": "file",
+      "name": "mainwindow.ui",
+      "filePath": "mainwindow.ui",
+      "summary": "MainWindow UI form - defines menu bar, toolbar, tab widget, and theme actions",
+      "tags": [
+        "ui",
+        "form",
+        "mainwindow"
+      ],
+      "complexity": "simple",
+      "language": "Qt UI"
+    },
+    {
+      "id": "file:SerialPanel.h",
+      "type": "file",
+      "name": "SerialPanel.h",
+      "filePath": "SerialPanel.h",
+      "summary": "Header for SerialPanel class - main UI controller widget for serial communication debugging",
+      "tags": [
+        "header",
+        "ui-controller",
+        "main-widget",
+        "serial-debugging"
+      ],
+      "complexity": "complex",
+      "language": "c"
+    },
+    {
+      "id": "file:SerialPanel.cpp",
+      "type": "file",
+      "name": "SerialPanel.cpp",
+      "filePath": "SerialPanel.cpp",
+      "summary": "Implementation of SerialPanel - UI setup, signal connections, data flow management, template export/import",
+      "tags": [
+        "implementation",
+        "ui-controller",
+        "signal-connections",
+        "data-flow",
+        "template-management"
+      ],
+      "complexity": "complex",
+      "language": "cpp"
+    },
+    {
+      "id": "file:serialpanel.ui",
+      "type": "file",
+      "name": "serialpanel.ui",
+      "filePath": "serialpanel.ui",
+      "summary": "Qt Designer UI file for SerialPanel - defines layout with connection, receive, send, and analysis sections",
+      "tags": [
+        "ui-file",
+        "qt-designer",
+        "layout",
+        "serial-panel"
+      ],
+      "complexity": "complex",
+      "language": "ui"
+    },
+    {
+      "id": "file:SerialManager.h",
+      "type": "file",
+      "name": "SerialManager.h",
+      "filePath": "SerialManager.h",
+      "summary": "Header for SerialManager class - serial port I/O management with throttling",
+      "tags": [
+        "header",
+        "serial-port",
+        "io-management",
+        "throttling"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "file:SerialManager.cpp",
+      "type": "file",
+      "name": "SerialManager.cpp",
+      "filePath": "SerialManager.cpp",
+      "summary": "Implementation of SerialManager - port open/close, data send/receive, DTR/RTS control",
+      "tags": [
+        "implementation",
+        "serial-port",
+        "data-transfer",
+        "hardware-control"
+      ],
+      "complexity": "complex",
+      "language": "cpp"
+    },
+    {
+      "id": "file:SerialConfig.h",
+      "type": "file",
+      "name": "SerialConfig.h",
+      "filePath": "SerialConfig.h",
+      "summary": "Header for SerialConfig struct - serial port configuration with QSettings persistence",
+      "tags": [
+        "header",
+        "configuration",
+        "serial-port",
+        "persistence"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "file:SerialRecord.h",
+      "type": "file",
+      "name": "SerialRecord.h",
+      "filePath": "SerialRecord.h",
+      "summary": "Header for SerialRecord struct - data structure for serial communication records",
+      "tags": [
+        "header",
+        "data-structure",
+        "record",
+        "serial-data"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "file:NetworkPanel.h",
+      "type": "file",
+      "name": "NetworkPanel.h",
+      "filePath": "NetworkPanel.h",
+      "summary": "NetworkPanel header - TCP/UDP debugging panel with send queue support",
+      "tags": [
+        "network",
+        "panel",
+        "header"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:NetworkPanel.cpp",
+      "type": "file",
+      "name": "NetworkPanel.cpp",
+      "filePath": "NetworkPanel.cpp",
+      "summary": "NetworkPanel implementation - TCP client/server/UDP connection, data send/receive, hex mode, encoding",
+      "tags": [
+        "network",
+        "panel",
+        "implementation"
+      ],
+      "complexity": "complex",
+      "language": "C++"
+    },
+    {
+      "id": "file:networkpanel.ui",
+      "type": "file",
+      "name": "networkpanel.ui",
+      "filePath": "networkpanel.ui",
+      "summary": "NetworkPanel UI form - mode selection, connection settings, receive/send areas, peer list, stats",
+      "tags": [
+        "ui",
+        "form",
+        "network"
+      ],
+      "complexity": "complex",
+      "language": "Qt UI"
+    },
+    {
+      "id": "file:NetworkManager.h",
+      "type": "file",
+      "name": "NetworkManager.h",
+      "filePath": "NetworkManager.h",
+      "summary": "NetworkManager header - TCP client/server and UDP socket management",
+      "tags": [
+        "network",
+        "manager",
+        "header"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:NetworkManager.cpp",
+      "type": "file",
+      "name": "NetworkManager.cpp",
+      "filePath": "NetworkManager.cpp",
+      "summary": "NetworkManager implementation - TCP/UDP open/close/send, peer management, error handling",
+      "tags": [
+        "network",
+        "manager",
+        "implementation"
+      ],
+      "complexity": "complex",
+      "language": "C++"
+    },
+    {
+      "id": "file:NetworkConfig.h",
+      "type": "file",
+      "name": "NetworkConfig.h",
+      "filePath": "NetworkConfig.h",
+      "summary": "NetworkConfig struct - network connection parameters with QSettings save/load",
+      "tags": [
+        "config",
+        "data-model",
+        "network"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:ProtocolParserBase.h",
+      "type": "file",
+      "name": "ProtocolParserBase.h",
+      "filePath": "ProtocolParserBase.h",
+      "summary": "ProtocolParserBase abstract class - defines parser interface with frameReady/rawDataReady/frameError signals",
+      "tags": [
+        "parser",
+        "abstract",
+        "header"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:ProtocolParser.h",
+      "type": "file",
+      "name": "ProtocolParser.h",
+      "filePath": "ProtocolParser.h",
+      "summary": "ProtocolParser header - custom protocol parser with CRC16 frame format (0x55 0xAA + length + payload + CRC)",
+      "tags": [
+        "parser",
+        "header"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:ProtocolParser.cpp",
+      "type": "file",
+      "name": "ProtocolParser.cpp",
+      "filePath": "ProtocolParser.cpp",
+      "summary": "ProtocolParser implementation - state machine for custom frame parsing with CRC-16/Modbus verification",
+      "tags": [
+        "parser",
+        "implementation"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:RawDataParser.h",
+      "type": "file",
+      "name": "RawDataParser.h",
+      "filePath": "RawDataParser.h",
+      "summary": "RawDataParser header - passthrough parser that emits rawDataReady for all input",
+      "tags": [
+        "parser",
+        "header"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:RawDataParser.cpp",
+      "type": "file",
+      "name": "RawDataParser.cpp",
+      "filePath": "RawDataParser.cpp",
+      "summary": "RawDataParser implementation - forwards raw bytes as rawDataReady signal",
+      "tags": [
+        "parser",
+        "implementation"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:TextDataParser.h",
+      "type": "file",
+      "name": "TextDataParser.h",
+      "filePath": "TextDataParser.h",
+      "summary": "Header for TextDataParser class - simple text protocol parser inheriting ProtocolParserBase",
+      "tags": [
+        "header",
+        "protocol-parser",
+        "text-data",
+        "parser"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "file:TextDataParser.cpp",
+      "type": "file",
+      "name": "TextDataParser.cpp",
+      "filePath": "TextDataParser.cpp",
+      "summary": "Implementation of TextDataParser - pass-through parser that emits frameReady for non-empty data",
+      "tags": [
+        "implementation",
+        "protocol-parser",
+        "text-parsing"
+      ],
+      "complexity": "simple",
+      "language": "cpp"
+    },
+    {
+      "id": "file:ParserController.h",
+      "type": "file",
+      "name": "ParserController.h",
+      "filePath": "ParserController.h",
+      "summary": "ParserController header - manages parser lifecycle, switching, and signal bridging",
+      "tags": [
+        "parser",
+        "controller",
+        "header"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:ParserController.cpp",
+      "type": "file",
+      "name": "ParserController.cpp",
+      "filePath": "ParserController.cpp",
+      "summary": "ParserController implementation - creates/destroys parsers and bridges their signals",
+      "tags": [
+        "parser",
+        "controller",
+        "implementation"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:SendQueue.h",
+      "type": "file",
+      "name": "SendQueue.h",
+      "filePath": "SendQueue.h",
+      "summary": "Header for SendQueue class - queued message sending with repeat counts and intervals",
+      "tags": [
+        "header",
+        "queue",
+        "scheduling",
+        "send-management"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "file:SendQueue.cpp",
+      "type": "file",
+      "name": "SendQueue.cpp",
+      "filePath": "SendQueue.cpp",
+      "summary": "Implementation of SendQueue - timer-based dispatch, loop support, item management",
+      "tags": [
+        "implementation",
+        "queue",
+        "timer-dispatch",
+        "loop-control"
+      ],
+      "complexity": "complex",
+      "language": "cpp"
+    },
+    {
+      "id": "file:DeviceRegistry.h",
+      "type": "file",
+      "name": "DeviceRegistry.h",
+      "filePath": "DeviceRegistry.h",
+      "summary": "DeviceRegistry header - USB device identification, alias management, one-click reconnect",
+      "tags": [
+        "device",
+        "registry",
+        "header"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:DeviceRegistry.cpp",
+      "type": "file",
+      "name": "DeviceRegistry.cpp",
+      "filePath": "DeviceRegistry.cpp",
+      "summary": "DeviceRegistry implementation - device key generation via VID/PID/serial, alias persistence",
+      "tags": [
+        "device",
+        "registry",
+        "implementation"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "file:RecordStore.h",
+      "type": "file",
+      "name": "RecordStore.h",
+      "filePath": "RecordStore.h",
+      "summary": "Header for RecordStore class - manages serial communication records with filtering and statistics",
+      "tags": [
+        "header",
+        "record-management",
+        "filtering",
+        "statistics"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "file:RecordStore.cpp",
+      "type": "file",
+      "name": "RecordStore.cpp",
+      "filePath": "RecordStore.cpp",
+      "summary": "Implementation of RecordStore - record storage, pattern matching, hex conversion, and direction text",
+      "tags": [
+        "implementation",
+        "record-management",
+        "pattern-matching"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "file:AutomationRuleEngine.h",
+      "type": "file",
+      "name": "AutomationRuleEngine.h",
+      "filePath": "AutomationRuleEngine.h",
+      "summary": "AutomationRuleEngine header - auto-reply pattern matching engine",
+      "tags": [
+        "automation",
+        "rule",
+        "header"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:AutomationRuleEngine.cpp",
+      "type": "file",
+      "name": "AutomationRuleEngine.cpp",
+      "filePath": "AutomationRuleEngine.cpp",
+      "summary": "AutomationRuleEngine implementation - regex/text pattern matching for auto-reply trigger",
+      "tags": [
+        "automation",
+        "rule",
+        "implementation"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "file:TemplateManager.h",
+      "type": "file",
+      "name": "TemplateManager.h",
+      "filePath": "TemplateManager.h",
+      "summary": "Header for TemplateManager class - JSON/CSV serialization for configs and records",
+      "tags": [
+        "header",
+        "serialization",
+        "json",
+        "csv",
+        "template"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "file:TemplateManager.cpp",
+      "type": "file",
+      "name": "TemplateManager.cpp",
+      "filePath": "TemplateManager.cpp",
+      "summary": "Implementation of TemplateManager - serial config serialization, record export, CSV escaping",
+      "tags": [
+        "implementation",
+        "serialization",
+        "json-export",
+        "csv-export"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "file:ThemeManager.h",
+      "type": "file",
+      "name": "ThemeManager.h",
+      "filePath": "ThemeManager.h",
+      "summary": "Header for ThemeManager class - singleton theme management for dark/light modes",
+      "tags": [
+        "header",
+        "theme",
+        "singleton",
+        "ui-styling"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "file:ThemeManager.cpp",
+      "type": "file",
+      "name": "ThemeManager.cpp",
+      "filePath": "ThemeManager.cpp",
+      "summary": "Implementation of ThemeManager - comprehensive dark/light CSS themes for all Qt widgets",
+      "tags": [
+        "implementation",
+        "theme",
+        "css",
+        "dark-mode",
+        "light-mode"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "file:CMakeLists.txt",
+      "type": "config",
+      "name": "CMakeLists.txt",
+      "filePath": "CMakeLists.txt",
+      "summary": "CMake build configuration - Qt6/5 Widgets+SerialPort+Network, C++17, AUTOUIC/AUTOMOC/AUTORCC",
+      "tags": [
+        "build",
+        "cmake",
+        "config"
+      ],
+      "complexity": "simple",
+      "language": "CMake"
+    },
+    {
+      "id": "file:ARCHITECTURE.md",
+      "type": "document",
+      "name": "ARCHITECTURE.md",
+      "filePath": "ARCHITECTURE.md",
+      "summary": "Architecture documentation - module relationships, data flow, persistence, and evolution plan",
+      "tags": [
+        "documentation",
+        "architecture"
+      ],
+      "complexity": "moderate",
+      "language": "Markdown"
+    },
+    {
+      "id": "class:mainwindow.cpp:MainWindow",
+      "type": "class",
+      "name": "MainWindow",
+      "filePath": "mainwindow.cpp",
+      "summary": "Top-level QMainWindow managing tabbed serial/network panels, settings, and theme switching",
+      "tags": [
+        "ui",
+        "mainwindow",
+        "container"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:SerialPanel.cpp:SerialPanel",
+      "type": "class",
+      "name": "SerialPanel",
+      "filePath": "SerialPanel.cpp",
+      "summary": "Core serial debugging panel - connection, parsing, filtering, auto-reply, queue, templates",
+      "tags": [
+        "ui",
+        "serial",
+        "panel",
+        "core"
+      ],
+      "complexity": "complex",
+      "language": "C++"
+    },
+    {
+      "id": "class:NetworkPanel.cpp:NetworkPanel",
+      "type": "class",
+      "name": "NetworkPanel",
+      "filePath": "NetworkPanel.cpp",
+      "summary": "Network debugging panel - TCP client/server/UDP, send queue, hex mode, encoding",
+      "tags": [
+        "ui",
+        "network",
+        "panel"
+      ],
+      "complexity": "complex",
+      "language": "C++"
+    },
+    {
+      "id": "class:SerialManager.cpp:SerialManager",
+      "type": "class",
+      "name": "SerialManager",
+      "filePath": "SerialManager.cpp",
+      "summary": "QSerialPort wrapper with buffered receive, throttle control, and DTR/RTS",
+      "tags": [
+        "serial",
+        "manager",
+        "io"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:NetworkManager.cpp:NetworkManager",
+      "type": "class",
+      "name": "NetworkManager",
+      "filePath": "NetworkManager.cpp",
+      "summary": "TCP client/server and UDP socket manager with peer tracking",
+      "tags": [
+        "network",
+        "manager",
+        "io"
+      ],
+      "complexity": "complex",
+      "language": "C++"
+    },
+    {
+      "id": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "type": "class",
+      "name": "ProtocolParserBase",
+      "filePath": "ProtocolParserBase.h",
+      "summary": "Abstract protocol parser base - defines inputBytes slot and frameReady/rawDataReady/frameError signals",
+      "tags": [
+        "parser",
+        "abstract",
+        "interface"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "class:ProtocolParser.cpp:ProtocolParser",
+      "type": "class",
+      "name": "ProtocolParser",
+      "filePath": "ProtocolParser.cpp",
+      "summary": "Custom protocol parser - state machine for 0x55AA + length + payload + CRC16/Modbus frames",
+      "tags": [
+        "parser",
+        "custom",
+        "crc"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:RawDataParser.cpp:RawDataParser",
+      "type": "class",
+      "name": "RawDataParser",
+      "filePath": "RawDataParser.cpp",
+      "summary": "Raw data parser - passes through all bytes as rawDataReady signal",
+      "tags": [
+        "parser",
+        "passthrough"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "class:TextDataParser.cpp:TextDataParser",
+      "type": "class",
+      "name": "TextDataParser",
+      "filePath": "TextDataParser.cpp",
+      "summary": "Text data parser - passes through all bytes as frameReady signal",
+      "tags": [
+        "parser",
+        "text"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "class:ParserController.cpp:ParserController",
+      "type": "class",
+      "name": "ParserController",
+      "filePath": "ParserController.cpp",
+      "summary": "Parser lifecycle controller - creates, switches, and bridges signals for protocol parsers",
+      "tags": [
+        "parser",
+        "controller",
+        "strategy"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:SendQueue.cpp:SendQueue",
+      "type": "class",
+      "name": "SendQueue",
+      "filePath": "SendQueue.cpp",
+      "summary": "Shared send queue - repeat count, per-item interval, loop cycling, dispatch timer",
+      "tags": [
+        "queue",
+        "shared",
+        "timer"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:DeviceRegistry.cpp:DeviceRegistry",
+      "type": "class",
+      "name": "DeviceRegistry",
+      "filePath": "DeviceRegistry.cpp",
+      "summary": "USB device identification and alias management via QSerialPortInfo",
+      "tags": [
+        "device",
+        "registry",
+        "usb"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:RecordStore.cpp:RecordStore",
+      "type": "class",
+      "name": "RecordStore",
+      "filePath": "RecordStore.cpp",
+      "summary": "Serial record storage with text/regex filtering, statistics, and display control",
+      "tags": [
+        "record",
+        "store",
+        "filter"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:AutomationRuleEngine.cpp:AutomationRuleEngine",
+      "type": "class",
+      "name": "AutomationRuleEngine",
+      "filePath": "AutomationRuleEngine.cpp",
+      "summary": "Auto-reply pattern matching - text/regex match on received records",
+      "tags": [
+        "automation",
+        "rule",
+        "pattern"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "class:TemplateManager.cpp:TemplateManager",
+      "type": "class",
+      "name": "TemplateManager",
+      "filePath": "TemplateManager.cpp",
+      "summary": "Config template serialization and record export (JSON, CSV)",
+      "tags": [
+        "template",
+        "serialization",
+        "export"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:ThemeManager.cpp:ThemeManager",
+      "type": "class",
+      "name": "ThemeManager",
+      "filePath": "ThemeManager.cpp",
+      "summary": "Singleton theme manager - Catppuccin Mocha dark and Latte light stylesheets",
+      "tags": [
+        "theme",
+        "singleton",
+        "stylesheet"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "class:SerialConfig.h:SerialConfig",
+      "type": "class",
+      "name": "SerialConfig",
+      "filePath": "SerialConfig.h",
+      "summary": "Serial port configuration struct with save/load persistence via QSettings",
+      "tags": [
+        "struct",
+        "configuration",
+        "serial-port",
+        "persistence"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "class:NetworkConfig.h:NetworkConfig",
+      "type": "class",
+      "name": "NetworkConfig",
+      "filePath": "NetworkConfig.h",
+      "summary": "Network connection configuration struct with QSettings persistence",
+      "tags": [
+        "config",
+        "data-model"
+      ],
+      "complexity": "simple",
+      "language": "C++"
+    },
+    {
+      "id": "class:SerialRecord.h:SerialRecord",
+      "type": "class",
+      "name": "SerialRecord",
+      "filePath": "SerialRecord.h",
+      "summary": "Data structure for serial communication records with direction, payload, and metadata",
+      "tags": [
+        "struct",
+        "data-structure",
+        "record",
+        "serial-data"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "function:SerialPanel.cpp:onFrameReady",
+      "type": "function",
+      "name": "onFrameReady",
+      "filePath": "SerialPanel.cpp",
+      "summary": "Processes parsed frames from ParserController and adds them to RecordStore",
+      "tags": [
+        "function",
+        "frame-processing",
+        "record-creation",
+        "auto-reply"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "function:SerialPanel.cpp:sendPayload",
+      "type": "function",
+      "name": "sendPayload",
+      "filePath": "SerialPanel.cpp",
+      "summary": "Sends data via SerialManager, creates TX record, and manages send history",
+      "tags": [
+        "function",
+        "data-send",
+        "record-creation",
+        "history"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "function:SerialPanel.cpp:handleAutoReply",
+      "type": "function",
+      "name": "handleAutoReply",
+      "filePath": "SerialPanel.cpp",
+      "summary": "Checks AutomationRuleEngine and sends auto-reply if pattern matches",
+      "tags": [
+        "automation",
+        "auto-reply"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "function:ParserController.cpp:createParser",
+      "type": "function",
+      "name": "createParser",
+      "filePath": "ParserController.cpp",
+      "summary": "Factory method - instantiates RawDataParser, TextDataParser, or ProtocolParser based on type",
+      "tags": [
+        "factory",
+        "parser"
+      ],
+      "complexity": "moderate",
+      "language": "C++"
+    },
+    {
+      "id": "function:SendQueue.cpp:dispatchNext",
+      "type": "function",
+      "name": "dispatchNext",
+      "filePath": "SendQueue.cpp",
+      "summary": "Dispatches next queued item, handles repeat counts, loop rotation, and timer scheduling",
+      "tags": [
+        "function",
+        "queue-dispatch",
+        "timer",
+        "loop-control"
+      ],
+      "complexity": "complex",
+      "language": "cpp"
+    },
+    {
+      "id": "class:RecordStore.h:RecordStore",
+      "type": "class",
+      "name": "RecordStore",
+      "filePath": "RecordStore.h",
+      "summary": "Manages serial communication records with filtering, statistics, and pattern matching",
+      "tags": [
+        "class",
+        "record-management",
+        "filtering",
+        "statistics",
+        "signals"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "class:SendQueue.h:SendQueue",
+      "type": "class",
+      "name": "SendQueue",
+      "filePath": "SendQueue.h",
+      "summary": "Queued message sender with repeat counts, intervals, and loop support",
+      "tags": [
+        "class",
+        "queue",
+        "scheduling",
+        "timer-based",
+        "repeat-send"
+      ],
+      "complexity": "complex",
+      "language": "c"
+    },
+    {
+      "id": "class:SerialManager.h:SerialManager",
+      "type": "class",
+      "name": "SerialManager",
+      "filePath": "SerialManager.h",
+      "summary": "Serial port I/O manager with buffered reads, throttling, and DTR/RTS control",
+      "tags": [
+        "class",
+        "serial-port",
+        "io-management",
+        "buffered-read",
+        "hardware-control"
+      ],
+      "complexity": "complex",
+      "language": "c"
+    },
+    {
+      "id": "class:SerialPanel.h:SerialPanel",
+      "type": "class",
+      "name": "SerialPanel",
+      "filePath": "SerialPanel.h",
+      "summary": "Main UI controller widget orchestrating serial communication, records, templates, and send queue",
+      "tags": [
+        "class",
+        "ui-controller",
+        "main-widget",
+        "orchestrator",
+        "serial-debugging"
+      ],
+      "complexity": "complex",
+      "language": "c"
+    },
+    {
+      "id": "class:TemplateManager.h:TemplateManager",
+      "type": "class",
+      "name": "TemplateManager",
+      "filePath": "TemplateManager.h",
+      "summary": "JSON/CSV serialization manager for serial configs and communication records",
+      "tags": [
+        "class",
+        "serialization",
+        "json",
+        "csv",
+        "template",
+        "export"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "class:TextDataParser.h:TextDataParser",
+      "type": "class",
+      "name": "TextDataParser",
+      "filePath": "TextDataParser.h",
+      "summary": "Simple text protocol parser that passes through raw data as frames",
+      "tags": [
+        "class",
+        "protocol-parser",
+        "text-data",
+        "pass-through"
+      ],
+      "complexity": "simple",
+      "language": "c"
+    },
+    {
+      "id": "class:ThemeManager.h:ThemeManager",
+      "type": "class",
+      "name": "ThemeManager",
+      "filePath": "ThemeManager.h",
+      "summary": "Singleton theme manager providing comprehensive dark/light CSS themes",
+      "tags": [
+        "class",
+        "singleton",
+        "theme",
+        "css",
+        "dark-mode",
+        "light-mode"
+      ],
+      "complexity": "moderate",
+      "language": "c"
+    },
+    {
+      "id": "function:RecordStore.cpp:addRecord",
+      "type": "function",
+      "name": "addRecord",
+      "filePath": "RecordStore.cpp",
+      "summary": "Adds a record to storage, updates statistics, and emits recordAdded/recordReady signals",
+      "tags": [
+        "function",
+        "record-management",
+        "signal-emission",
+        "filtering"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "function:RecordStore.cpp:matchesFilter",
+      "type": "function",
+      "name": "matchesFilter",
+      "filePath": "RecordStore.cpp",
+      "summary": "Checks if a record matches the current filter pattern (plain text or regex)",
+      "tags": [
+        "function",
+        "filtering",
+        "pattern-matching"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "function:SerialManager.cpp:handleReadyRead",
+      "type": "function",
+      "name": "handleReadyRead",
+      "filePath": "SerialManager.cpp",
+      "summary": "Handles incoming serial data with buffered reads and throttled flushing",
+      "tags": [
+        "function",
+        "serial-port",
+        "buffered-read",
+        "throttling"
+      ],
+      "complexity": "moderate",
+      "language": "cpp"
+    },
+    {
+      "id": "function:SerialPanel.cpp:setupConnections",
+      "type": "function",
+      "name": "setupConnections",
+      "filePath": "SerialPanel.cpp",
+      "summary": "Establishes all signal-slot connections between UI, SerialManager, RecordStore, and SendQueue",
+      "tags": [
+        "function",
+        "signal-connections",
+        "initialization",
+        "data-flow"
+      ],
+      "complexity": "complex",
+      "language": "cpp"
+    },
+    {
+      "id": "function:TemplateManager.cpp:recordToJson",
+      "type": "function",
+      "name": "recordToJson",
+      "filePath": "TemplateManager.cpp",
+      "summary": "Serializes a SerialRecord to JSON object with all fields",
+      "tags": [
+        "function",
+        "serialization",
+        "json",
+        "record-export"
+      ],
+      "complexity": "simple",
+      "language": "cpp"
+    },
+    {
+      "id": "function:ThemeManager.cpp:applyDarkTheme",
+      "type": "function",
+      "name": "applyDarkTheme",
+      "filePath": "ThemeManager.cpp",
+      "summary": "Applies comprehensive dark theme stylesheet to entire application",
+      "tags": [
+        "function",
+        "theme",
+        "dark-mode",
+        "stylesheet"
+      ],
+      "complexity": "simple",
+      "language": "cpp"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:main.cpp",
+      "target": "file:mainwindow.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:main.cpp",
+      "target": "class:mainwindow.cpp:MainWindow",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:mainwindow.h",
+      "target": "file:mainwindow.ui",
+      "type": "depends_on",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:mainwindow.cpp",
+      "target": "file:mainwindow.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:mainwindow.cpp",
+      "target": "file:NetworkPanel.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:mainwindow.cpp",
+      "target": "file:SerialPanel.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:mainwindow.cpp",
+      "target": "file:ThemeManager.h",
+      "type": "imports",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "class:mainwindow.cpp:MainWindow",
+      "target": "class:SerialPanel.cpp:SerialPanel",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:mainwindow.cpp:MainWindow",
+      "target": "class:NetworkPanel.cpp:NetworkPanel",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:mainwindow.cpp:MainWindow",
+      "target": "class:ThemeManager.cpp:ThemeManager",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "class:mainwindow.cpp:MainWindow",
+      "target": "class:SerialConfig.h:SerialConfig",
+      "type": "depends_on",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "class:mainwindow.cpp:MainWindow",
+      "target": "class:NetworkConfig.h:NetworkConfig",
+      "type": "depends_on",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.h",
+      "target": "file:SerialConfig.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.h",
+      "target": "file:SerialRecord.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:SerialPanel.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:SerialManager.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:DeviceRegistry.h",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:RecordStore.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:AutomationRuleEngine.h",
+      "type": "imports",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:TemplateManager.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:ParserController.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialPanel.cpp",
+      "target": "file:SendQueue.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:SerialManager.cpp:SerialManager",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:ParserController.cpp:ParserController",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:DeviceRegistry.cpp:DeviceRegistry",
+      "type": "depends_on",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:RecordStore.cpp:RecordStore",
+      "type": "depends_on",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:AutomationRuleEngine.cpp:AutomationRuleEngine",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:TemplateManager.cpp:TemplateManager",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.cpp:SerialPanel",
+      "target": "class:SendQueue.cpp:SendQueue",
+      "type": "depends_on",
+      "weight": 0.75,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialManager.cpp:SerialManager",
+      "target": "class:SerialConfig.h:SerialConfig",
+      "type": "depends_on",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialManager.cpp:SerialManager",
+      "target": "class:ParserController.cpp:ParserController",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkPanel.h",
+      "target": "file:NetworkConfig.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkPanel.h",
+      "target": "file:SendQueue.h",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkPanel.cpp",
+      "target": "file:NetworkPanel.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkPanel.cpp",
+      "target": "file:NetworkManager.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkPanel.cpp",
+      "target": "file:SendQueue.h",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "class:NetworkPanel.cpp:NetworkPanel",
+      "target": "class:NetworkManager.cpp:NetworkManager",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:NetworkPanel.cpp:NetworkPanel",
+      "target": "class:SendQueue.cpp:SendQueue",
+      "type": "depends_on",
+      "weight": 0.75,
+      "direction": "forward"
+    },
+    {
+      "source": "class:NetworkPanel.cpp:NetworkPanel",
+      "target": "class:NetworkConfig.h:NetworkConfig",
+      "type": "depends_on",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkManager.h",
+      "target": "file:NetworkManager.cpp",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:NetworkManager.cpp:NetworkManager",
+      "target": "class:NetworkConfig.h:NetworkConfig",
+      "type": "depends_on",
+      "weight": 0.3,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ProtocolParser.h",
+      "target": "file:ProtocolParserBase.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:RawDataParser.h",
+      "target": "file:ProtocolParserBase.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:TextDataParser.h",
+      "target": "file:ProtocolParserBase.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ProtocolParser.cpp:ProtocolParser",
+      "target": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "type": "inherits",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:RawDataParser.cpp:RawDataParser",
+      "target": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "type": "inherits",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TextDataParser.cpp:TextDataParser",
+      "target": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "type": "inherits",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "target": "class:ProtocolParser.cpp:ProtocolParser",
+      "type": "implements",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "target": "class:RawDataParser.cpp:RawDataParser",
+      "type": "implements",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "target": "class:TextDataParser.cpp:TextDataParser",
+      "type": "implements",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ParserController.cpp",
+      "target": "file:ProtocolParserBase.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ParserController.cpp",
+      "target": "file:RawDataParser.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ParserController.cpp",
+      "target": "file:TextDataParser.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ParserController.cpp",
+      "target": "file:ProtocolParser.h",
+      "type": "imports",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ParserController.cpp:ParserController",
+      "target": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ParserController.cpp:ParserController",
+      "target": "class:RawDataParser.cpp:RawDataParser",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ParserController.cpp:ParserController",
+      "target": "class:TextDataParser.cpp:TextDataParser",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ParserController.cpp:ParserController",
+      "target": "class:ProtocolParser.cpp:ProtocolParser",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "function:ParserController.cpp:createParser",
+      "target": "class:RawDataParser.cpp:RawDataParser",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:ParserController.cpp:createParser",
+      "target": "class:TextDataParser.cpp:TextDataParser",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:ParserController.cpp:createParser",
+      "target": "class:ProtocolParser.cpp:ProtocolParser",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:RecordStore.h",
+      "target": "file:SerialRecord.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:RecordStore.cpp:RecordStore",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "file:AutomationRuleEngine.h",
+      "target": "file:SerialRecord.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:AutomationRuleEngine.cpp:AutomationRuleEngine",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:AutomationRuleEngine.cpp:AutomationRuleEngine",
+      "target": "class:RecordStore.cpp:RecordStore",
+      "type": "calls",
+      "weight": 0.5,
+      "direction": "forward"
+    },
+    {
+      "source": "file:TemplateManager.h",
+      "target": "file:SerialConfig.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:TemplateManager.h",
+      "target": "file:SerialRecord.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.cpp:TemplateManager",
+      "target": "class:SerialConfig.h:SerialConfig",
+      "type": "depends_on",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.cpp:TemplateManager",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.cpp:TemplateManager",
+      "target": "class:RecordStore.cpp:RecordStore",
+      "type": "calls",
+      "weight": 0.4,
+      "direction": "forward"
+    },
+    {
+      "source": "file:DeviceRegistry.cpp",
+      "target": "file:DeviceRegistry.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SendQueue.cpp",
+      "target": "file:SendQueue.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ThemeManager.cpp",
+      "target": "file:ThemeManager.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialManager.cpp",
+      "target": "file:SerialManager.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:NetworkManager.cpp",
+      "target": "file:NetworkManager.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:main.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:mainwindow.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:SerialPanel.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:NetworkPanel.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:SerialManager.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:NetworkManager.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:CMakeLists.txt",
+      "target": "file:ThemeManager.cpp",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ARCHITECTURE.md",
+      "target": "file:CMakeLists.txt",
+      "type": "documents",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ARCHITECTURE.md",
+      "target": "file:mainwindow.cpp",
+      "type": "documents",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ARCHITECTURE.md",
+      "target": "file:SerialPanel.cpp",
+      "type": "documents",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ARCHITECTURE.md",
+      "target": "file:NetworkPanel.cpp",
+      "type": "documents",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ARCHITECTURE.md",
+      "target": "file:ProtocolParserBase.h",
+      "type": "documents",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:ARCHITECTURE.md",
+      "target": "file:SendQueue.h",
+      "type": "documents",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:onFrameReady",
+      "target": "class:RecordStore.cpp:RecordStore",
+      "type": "calls",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:onFrameReady",
+      "target": "function:SerialPanel.cpp:handleAutoReply",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:sendPayload",
+      "target": "class:SerialManager.cpp:SerialManager",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:handleAutoReply",
+      "target": "class:AutomationRuleEngine.cpp:AutomationRuleEngine",
+      "type": "calls",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:handleAutoReply",
+      "target": "function:SerialPanel.cpp:sendPayload",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SendQueue.cpp:dispatchNext",
+      "target": "class:SendQueue.cpp:SendQueue",
+      "type": "contains",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:serialpanel.ui",
+      "target": "class:SerialPanel.cpp:SerialPanel",
+      "type": "implements",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:networkpanel.ui",
+      "target": "class:NetworkPanel.cpp:NetworkPanel",
+      "type": "implements",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:mainwindow.ui",
+      "target": "class:mainwindow.cpp:MainWindow",
+      "type": "implements",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "file:RecordStore.cpp",
+      "target": "file:RecordStore.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:SerialManager.h",
+      "target": "file:SerialConfig.h",
+      "type": "imports",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "file:TemplateManager.cpp",
+      "target": "file:TemplateManager.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "file:TemplateManager.cpp",
+      "target": "file:RecordStore.h",
+      "type": "imports",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:TextDataParser.cpp",
+      "target": "file:TextDataParser.h",
+      "type": "imports",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "class:RecordStore.h:RecordStore",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialManager.h:SerialManager",
+      "target": "class:SerialConfig.h:SerialConfig",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:SerialManager.h:SerialManager",
+      "type": "contains",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "contains",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:TemplateManager.h:TemplateManager",
+      "type": "contains",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:SendQueue.h:SendQueue",
+      "type": "contains",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:SerialConfig.h:SerialConfig",
+      "type": "depends_on",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.h:TemplateManager",
+      "target": "class:SerialConfig.h:SerialConfig",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.h:TemplateManager",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.h:TemplateManager",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "depends_on",
+      "weight": 0.6,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TextDataParser.h:TextDataParser",
+      "target": "class:ProtocolParserBase.h:ProtocolParserBase",
+      "type": "inherits",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:setupConnections",
+      "target": "class:SerialManager.h:SerialManager",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:setupConnections",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "calls",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:setupConnections",
+      "target": "class:SendQueue.h:SendQueue",
+      "type": "calls",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:onFrameReady",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "calls",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:onFrameReady",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:sendPayload",
+      "target": "class:SerialManager.h:SerialManager",
+      "type": "calls",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:sendPayload",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "calls",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "function:RecordStore.cpp:addRecord",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "function:RecordStore.cpp:addRecord",
+      "target": "function:RecordStore.cpp:matchesFilter",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SendQueue.cpp:dispatchNext",
+      "target": "class:SendQueue.h:SendQueue",
+      "type": "calls",
+      "weight": 1,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialManager.cpp:handleReadyRead",
+      "target": "class:SerialManager.h:SerialManager",
+      "type": "calls",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:TemplateManager.cpp:recordToJson",
+      "target": "class:SerialRecord.h:SerialRecord",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "function:TemplateManager.cpp:recordToJson",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "calls",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "file:serialpanel.ui",
+      "target": "class:SerialPanel.h:SerialPanel",
+      "type": "implements",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "file:serialpanel.ui",
+      "type": "depends_on",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:ThemeManager.h:ThemeManager",
+      "target": "function:ThemeManager.cpp:applyDarkTheme",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:RecordStore.h:RecordStore",
+      "target": "function:RecordStore.cpp:addRecord",
+      "type": "contains",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:RecordStore.h:RecordStore",
+      "target": "function:RecordStore.cpp:matchesFilter",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SendQueue.h:SendQueue",
+      "target": "function:SendQueue.cpp:dispatchNext",
+      "type": "contains",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialManager.h:SerialManager",
+      "target": "function:SerialManager.cpp:handleReadyRead",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "function:SerialPanel.cpp:setupConnections",
+      "type": "contains",
+      "weight": 0.95,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "function:SerialPanel.cpp:onFrameReady",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "function:SerialPanel.cpp:sendPayload",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:TemplateManager.h:TemplateManager",
+      "target": "function:TemplateManager.cpp:recordToJson",
+      "type": "contains",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "function:SerialPanel.cpp:sendPayload",
+      "target": "function:SerialPanel.cpp:onFrameReady",
+      "type": "data_flow",
+      "weight": 0.7,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialManager.h:SerialManager",
+      "target": "class:SerialPanel.h:SerialPanel",
+      "type": "data_flow",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:RecordStore.h:RecordStore",
+      "type": "data_flow",
+      "weight": 0.9,
+      "direction": "forward"
+    },
+    {
+      "source": "class:RecordStore.h:RecordStore",
+      "target": "class:SerialPanel.h:SerialPanel",
+      "type": "data_flow",
+      "weight": 0.85,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SendQueue.h:SendQueue",
+      "target": "class:SerialPanel.h:SerialPanel",
+      "type": "data_flow",
+      "weight": 0.8,
+      "direction": "forward"
+    },
+    {
+      "source": "class:SerialPanel.h:SerialPanel",
+      "target": "class:SendQueue.h:SendQueue",
+      "type": "data_flow",
+      "weight": 0.8,
+      "direction": "forward"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:application-shell",
+      "name": "Application Shell",
+      "description": "Top-level application entry point and main window management",
+      "nodeIds": [
+        "file:main.cpp",
+        "file:mainwindow.h",
+        "file:mainwindow.cpp",
+        "file:mainwindow.ui"
+      ]
+    },
+    {
+      "id": "layer:serial-panel",
+      "name": "Serial Panel",
+      "description": "Serial communication debugging UI and business logic",
+      "nodeIds": [
+        "file:SerialPanel.h",
+        "file:SerialPanel.cpp",
+        "file:serialpanel.ui"
+      ]
+    },
+    {
+      "id": "layer:network-panel",
+      "name": "Network Panel",
+      "description": "Network (TCP/UDP) communication debugging UI and business logic",
+      "nodeIds": [
+        "file:NetworkPanel.h",
+        "file:NetworkPanel.cpp",
+        "file:networkpanel.ui"
+      ]
+    },
+    {
+      "id": "layer:serial-io",
+      "name": "Serial I/O",
+      "description": "Serial port communication manager and configuration",
+      "nodeIds": [
+        "file:SerialManager.h",
+        "file:SerialManager.cpp",
+        "file:SerialConfig.h",
+        "file:SerialRecord.h"
+      ]
+    },
+    {
+      "id": "layer:network-io",
+      "name": "Network I/O",
+      "description": "TCP/UDP socket communication manager and configuration",
+      "nodeIds": [
+        "file:NetworkManager.h",
+        "file:NetworkManager.cpp",
+        "file:NetworkConfig.h"
+      ]
+    },
+    {
+      "id": "layer:protocol-parsing",
+      "name": "Protocol Parsing",
+      "description": "Protocol parser framework with strategy pattern for multiple protocols",
+      "nodeIds": [
+        "file:ProtocolParserBase.h",
+        "file:ProtocolParser.h",
+        "file:ProtocolParser.cpp",
+        "file:RawDataParser.h",
+        "file:RawDataParser.cpp",
+        "file:TextDataParser.h",
+        "file:TextDataParser.cpp",
+        "file:ParserController.h",
+        "file:ParserController.cpp"
+      ]
+    },
+    {
+      "id": "layer:data-services",
+      "name": "Data Services",
+      "description": "Record storage, device registry, automation rules, and template management",
+      "nodeIds": [
+        "file:RecordStore.h",
+        "file:RecordStore.cpp",
+        "file:DeviceRegistry.h",
+        "file:DeviceRegistry.cpp",
+        "file:AutomationRuleEngine.h",
+        "file:AutomationRuleEngine.cpp",
+        "file:TemplateManager.h",
+        "file:TemplateManager.cpp"
+      ]
+    },
+    {
+      "id": "layer:send-queue",
+      "name": "Send Queue",
+      "description": "Shared send queue with repeat count, interval control, and loop support",
+      "nodeIds": [
+        "file:SendQueue.h",
+        "file:SendQueue.cpp"
+      ]
+    },
+    {
+      "id": "layer:theming",
+      "name": "Theming",
+      "description": "Theme management for dark and light modes",
+      "nodeIds": [
+        "file:ThemeManager.h",
+        "file:ThemeManager.cpp"
+      ]
+    },
+    {
+      "id": "layer:build-config",
+      "name": "Build & Documentation",
+      "description": "Build configuration and project documentation",
+      "nodeIds": [
+        "file:CMakeLists.txt",
+        "file:ARCHITECTURE.md"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "项目概览",
+      "description": "从 ARCHITECTURE.md 开始，了解项目的整体架构、目录结构和设计理念。这是一个基于 Qt Widgets 的串口/网口通信调试工具。",
+      "nodeIds": [
+        "file:ARCHITECTURE.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "应用入口",
+      "description": "从 main.cpp 入手，理解应用如何启动。程序创建 QApplication，实例化 MainWindow 并显示。",
+      "nodeIds": [
+        "file:main.cpp",
+        "file:mainwindow.h",
+        "file:mainwindow.cpp"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "主窗口与标签页管理",
+      "description": "MainWindow 通过 QTabWidget 管理多个 SerialPanel 和 NetworkPanel 标签页，负责主题切换和设置持久化。",
+      "nodeIds": [
+        "file:mainwindow.ui",
+        "file:mainwindow.cpp"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "串口通信核心 — SerialPanel",
+      "description": "SerialPanel 是项目最核心的模块，承担串口连接管理、数据收发、协议解析、过滤、自动回复等功能。这是理解整个系统的关键。",
+      "nodeIds": [
+        "file:SerialPanel.h",
+        "file:SerialPanel.cpp",
+        "file:serialpanel.ui"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "串口 I/O 层",
+      "description": "SerialManager 是 QSerialPort 的薄封装，负责实际的串口读写，通过信号与 SerialPanel 通信。SerialConfig 定义串口参数结构。",
+      "nodeIds": [
+        "file:SerialManager.h",
+        "file:SerialManager.cpp",
+        "file:SerialConfig.h"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "协议解析框架",
+      "description": "使用策略模式的协议解析系统。ProtocolParserBase 定义抽象接口，ParserController 负责切换解析器。支持原始数据、文本和自定义 0x55AA 协议。",
+      "nodeIds": [
+        "file:ProtocolParserBase.h",
+        "file:ParserController.h",
+        "file:ProtocolParser.cpp",
+        "file:RawDataParser.cpp",
+        "file:TextDataParser.cpp"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "网口通信 — NetworkPanel",
+      "description": "NetworkPanel 支持 TCP 客户端/服务端和 UDP 三种模式，结构与 SerialPanel 类似但更简洁。",
+      "nodeIds": [
+        "file:NetworkPanel.h",
+        "file:NetworkPanel.cpp",
+        "file:NetworkManager.h",
+        "file:NetworkManager.cpp"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "辅助服务层",
+      "description": "RecordStore 管理收发记录和过滤，DeviceRegistry 处理设备识别和别名，AutomationRuleEngine 实现自动回复，TemplateManager 负责配置模板导入导出。",
+      "nodeIds": [
+        "file:RecordStore.h",
+        "file:DeviceRegistry.h",
+        "file:AutomationRuleEngine.h",
+        "file:TemplateManager.h"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "发送队列",
+      "description": "SendQueue 是串口和网口共享的发送队列组件，支持重复发送、间隔控制和队列管理。通过信号请求面板发送数据。",
+      "nodeIds": [
+        "file:SendQueue.h",
+        "file:SendQueue.cpp"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "主题系统",
+      "description": "ThemeManager 提供 Catppuccin 风格的暗色和亮色主题切换，通过全局样式表实现。",
+      "nodeIds": [
+        "file:ThemeManager.h",
+        "file:ThemeManager.cpp"
+      ]
+    }
+  ]
+}
