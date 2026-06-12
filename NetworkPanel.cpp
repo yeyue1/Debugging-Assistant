@@ -10,8 +10,12 @@
 #include <QDateTime>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QItemSelectionModel>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
@@ -26,10 +30,17 @@
 #include <QTextStream>
 #include <QToolButton>
 #include <QTimer>
+#include <QSplitter>
 #include <QtGlobal>
 
+#include "AppConstants.h"
 #include "NetworkManager.h"
 #include "SendQueue.h"
+#include "PanelHelper.h"
+#include "EncodingCodec.h"
+#include "ThemeColors.h"
+#include "RecordStore.h"
+#include "TemplateManager.h"
 
 namespace {
 
@@ -47,74 +58,13 @@ QString normalizeHex(QString text)
     return text;
 }
 
-void insertAfter(QBoxLayout* layout, QWidget* anchor, QWidget* widget)
-{
-    const int index = layout ? layout->indexOf(anchor) : -1;
-    if (index >= 0) {
-        layout->insertWidget(index + 1, widget);
-    } else if (layout) {
-        layout->addWidget(widget);
-    }
-}
-
-QToolButton* createMenuButton(QWidget* parent, const QString& text)
-{
-    auto* button = new QToolButton(parent);
-    button->setText(text);
-    button->setPopupMode(QToolButton::InstantPopup);
-    button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    return button;
-}
-
-QTableWidgetItem* readOnlyTableItem(const QString& text)
-{
-    auto* item = new QTableWidgetItem(text);
-    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-    return item;
-}
-
-QTableWidgetItem* editableTableItem(const QString& text)
-{
-    return new QTableWidgetItem(text);
-}
-
-QString visibleQueueText(QString text)
-{
-    text.replace(QLatin1Char('\r'), QStringLiteral("\\r"));
-    text.replace(QLatin1Char('\n'), QStringLiteral("\\n"));
-    return text;
-}
-
-QString queueTextFromVisible(QString text)
-{
-    text.replace(QStringLiteral("\\r"), QStringLiteral("\r"));
-    text.replace(QStringLiteral("\\n"), QStringLiteral("\n"));
-    return text;
-}
-
-int positiveCellValue(const QString& text, int fallback, int minimum, int maximum)
-{
-    bool ok = false;
-    const int value = text.trimmed().toInt(&ok);
-    return ok ? qBound(minimum, value, maximum) : fallback;
-}
-
-QAction* addCheckAction(QMenu* menu, const QString& text, QCheckBox* checkBox)
-{
-    QAction* action = menu->addAction(text);
-    action->setCheckable(true);
-    action->setChecked(checkBox->isChecked());
-    QObject::connect(action, &QAction::toggled, checkBox, &QCheckBox::setChecked);
-    QObject::connect(checkBox, &QCheckBox::toggled, action, &QAction::setChecked);
-    return action;
-}
-
 }
 
 NetworkPanel::NetworkPanel(QWidget* parent)
     : QWidget(parent),
       ui(new Ui::NetworkPanel),
       m_network(new NetworkManager(this)),
+      m_recordStore(new RecordStore(this)),
       m_sendQueue(new SendQueue(this)),
       m_timerSendTimer(new QTimer(this))
 {
@@ -180,6 +130,10 @@ void NetworkPanel::setNetworkConfig(const NetworkConfig& config)
 
 void NetworkPanel::setupUiFromForm()
 {
+    m_filterEdit = ui->filterEdit;
+    m_filterRegexCheck = ui->filterRegexCheck;
+    m_filterHideCheck = ui->filterHideCheck;
+
     updateStatusIndicator(false);
     updateModeUi();
     updateStatistics();
@@ -206,6 +160,17 @@ void NetworkPanel::setupConnections()
     connect(m_network, &NetworkManager::errorOccurred, this, &NetworkPanel::onNetworkError);
     connect(m_network, &NetworkManager::peerListChanged, this, &NetworkPanel::onPeerListChanged);
 
+    // ── 过滤 UI → RecordStore ──
+    connect(m_filterEdit, &QLineEdit::textChanged, this, &NetworkPanel::onFilterChanged);
+    connect(m_filterRegexCheck, &QCheckBox::toggled, this, &NetworkPanel::onFilterChanged);
+    connect(m_filterHideCheck, &QCheckBox::toggled, this, &NetworkPanel::onFilterChanged);
+
+    // ── RecordStore → NetworkPanel ──
+    connect(m_recordStore, &RecordStore::recordReady, this, &NetworkPanel::appendRecordToReceive);
+    connect(m_recordStore, &RecordStore::cleared, this, [this]() {
+        ui->rxEdit->clear();
+    });
+
     setupActionMenus();
 }
 
@@ -221,29 +186,29 @@ void NetworkPanel::setupActionMenus()
     ui->saveDataButton->hide();
     ui->timerSendInterval->setPrefix(tr("间隔 "));
 
-    auto* connectionButton = createMenuButton(this, tr("网口操作"));
+    auto* connectionButton = PanelHelper::createMenuButton(this, tr("网口操作"));
     auto* connectionMenu = new QMenu(connectionButton);
     connectionMenu->addAction(tr("清空接收区"), this, &NetworkPanel::onClearClicked);
     connectionButton->setMenu(connectionMenu);
-    insertAfter(ui->remoteRowLayout, ui->closeButton, connectionButton);
+    PanelHelper::insertAfter(ui->remoteRowLayout, ui->closeButton, connectionButton);
 
-    auto* displayButton = createMenuButton(this, tr("显示设置"));
+    auto* displayButton = PanelHelper::createMenuButton(this, tr("显示设置"));
     auto* displayMenu = new QMenu(displayButton);
-    addCheckAction(displayMenu, tr("十六进制显示"), ui->hexDisplayCheck);
-    addCheckAction(displayMenu, tr("时间戳"), ui->timestampCheck);
-    addCheckAction(displayMenu, tr("自动滚动"), ui->autoScrollCheck);
+    PanelHelper::addCheckAction(displayMenu, tr("十六进制显示"), ui->hexDisplayCheck);
+    PanelHelper::addCheckAction(displayMenu, tr("时间戳"), ui->timestampCheck);
+    PanelHelper::addCheckAction(displayMenu, tr("自动滚动"), ui->autoScrollCheck);
     displayButton->setMenu(displayMenu);
     ui->receiveOptionsLayout->insertWidget(0, displayButton);
 
-    auto* sendButton = createMenuButton(this, tr("发送操作"));
+    auto* sendButton = PanelHelper::createMenuButton(this, tr("发送操作"));
     auto* sendMenu = new QMenu(sendButton);
-    addCheckAction(sendMenu, tr("十六进制发送"), ui->hexSendCheck);
-    addCheckAction(sendMenu, tr("定时发送"), ui->timerSendCheck);
+    PanelHelper::addCheckAction(sendMenu, tr("十六进制发送"), ui->hexSendCheck);
+    PanelHelper::addCheckAction(sendMenu, tr("定时发送"), ui->timerSendCheck);
     sendMenu->addSeparator();
     sendMenu->addAction(tr("发送文件"), this, &NetworkPanel::onSendFileClicked);
     sendMenu->addAction(tr("保存数据"), this, &NetworkPanel::onSaveDataClicked);
     sendButton->setMenu(sendMenu);
-    insertAfter(ui->sendButtonLayout, ui->sendButton, sendButton);
+    PanelHelper::insertAfter(ui->sendButtonLayout, ui->sendButton, sendButton);
 }
 
 void NetworkPanel::setupSendPreview()
@@ -335,16 +300,16 @@ void NetworkPanel::refreshSendQueueTable()
     m_queueTable->setRowCount(m_sendQueue->pendingItemCount());
     for (int row = 0; row < m_sendQueue->pendingItemCount(); ++row) {
         const SendQueue::QueueItem item = m_sendQueue->itemAt(row);
-        const QString displayText = visibleQueueText(item.displayText);
+        const QString displayText = PanelHelper::visibleQueueText(item.displayText);
 
-        m_queueTable->setItem(row, 0, readOnlyTableItem(QString::number(row + 1)));
-        m_queueTable->setItem(row, 1, editableTableItem(QString::number(item.remaining)));
-        m_queueTable->setItem(row, 2, editableTableItem(QString::number(item.repeatCount)));
-        m_queueTable->setItem(row, 3, editableTableItem(QString::number(item.intervalMs)));
-        m_queueTable->setItem(row, 4, readOnlyTableItem(QString::number(item.payload.size())));
-        m_queueTable->setItem(row, 5, readOnlyTableItem(queueTargetText(item)));
-        m_queueTable->setItem(row, 6, readOnlyTableItem(QString::fromLatin1(item.payload.toHex(' ')).toUpper()));
-        m_queueTable->setItem(row, 7, editableTableItem(displayText));
+        m_queueTable->setItem(row, 0, PanelHelper::readOnlyTableItem(QString::number(row + 1)));
+        m_queueTable->setItem(row, 1, PanelHelper::editableTableItem(QString::number(item.remaining)));
+        m_queueTable->setItem(row, 2, PanelHelper::editableTableItem(QString::number(item.repeatCount)));
+        m_queueTable->setItem(row, 3, PanelHelper::editableTableItem(QString::number(item.intervalMs)));
+        m_queueTable->setItem(row, 4, PanelHelper::readOnlyTableItem(QString::number(item.payload.size())));
+        m_queueTable->setItem(row, 5, PanelHelper::readOnlyTableItem(queueTargetText(item)));
+        m_queueTable->setItem(row, 6, PanelHelper::readOnlyTableItem(QString::fromLatin1(item.payload.toHex(' ')).toUpper()));
+        m_queueTable->setItem(row, 7, PanelHelper::editableTableItem(displayText));
     }
 
     m_queueTable->resizeColumnsToContents();
@@ -403,10 +368,15 @@ void NetworkPanel::onSendClicked()
     }
 
     m_txByteCount += static_cast<uint64_t>(written);
-    appendLine(QStringLiteral("发送 %1 字节: %2")
-                   .arg(written)
-                   .arg(displayTextForBytes(payload.left(static_cast<int>(written)))),
-               QColor(QStringLiteral("#89b4fa")));
+    const QByteArray sentData = payload.left(static_cast<int>(written));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::Tx;
+    record.payload = sentData;
+    record.text = displayTextForBytes(sentData);
+    record.protocol = QStringLiteral("发送");
+    m_recordStore->addRecord(record);
     updateStatistics();
 }
 
@@ -434,27 +404,46 @@ void NetworkPanel::onSendFileClicked()
     }
 
     m_txByteCount += static_cast<uint64_t>(written);
-    appendLine(QStringLiteral("发送文件 %1 字节: %2").arg(written).arg(fileName),
-               QColor(QStringLiteral("#89b4fa")));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::Tx;
+    record.payload = payload.left(static_cast<int>(written));
+    record.text = QFileInfo(fileName).fileName();
+    record.protocol = QStringLiteral("发送文件");
+    m_recordStore->addRecord(record);
     updateStatistics();
 }
 
 void NetworkPanel::onSaveDataClicked()
 {
     const QString fileName = QFileDialog::getSaveFileName(
-        this, tr("保存数据"), QString(), tr("文本文件 (*.txt);;所有文件 (*)"));
+        this,
+        tr("保存数据"),
+        QString(),
+        tr("JSON 文件 (*.json);;CSV 文件 (*.csv);;文本文件 (*.txt);;所有文件 (*)"));
     if (fileName.isEmpty()) {
         return;
     }
 
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::warning(this, tr("保存数据"), tr("无法写入文件。"));
-        return;
-    }
+    // 导出选项对话框
+    QMessageBox exportBox(this);
+    exportBox.setWindowTitle(tr("导出范围"));
+    exportBox.setText(tr("选择导出范围:"));
+    QPushButton* allButton = exportBox.addButton(tr("全部记录"), QMessageBox::AcceptRole);
+    exportBox.addButton(tr("当前过滤结果"), QMessageBox::RejectRole);
+    exportBox.exec();
 
-    QTextStream out(&file);
-    out << ui->rxEdit->toPlainText();
+    const bool filteredOnly = exportBox.clickedButton() != allButton;
+
+    const QString suffix = QFileInfo(fileName).suffix().toLower();
+    if (suffix == QStringLiteral("json")) {
+        saveRecordsAsJson(fileName, filteredOnly);
+    } else if (suffix == QStringLiteral("csv")) {
+        saveRecordsAsCsv(fileName, filteredOnly);
+    } else {
+        saveRecordsAsText(fileName, filteredOnly);
+    }
 }
 
 void NetworkPanel::onTimerSendToggled(bool enabled)
@@ -558,17 +547,17 @@ void NetworkPanel::onQueueTableItemChanged(QTableWidgetItem* tableItem)
 
     switch (tableItem->column()) {
     case 1:
-        item.remaining = positiveCellValue(tableItem->text(), item.remaining, 1, 9999);
+        item.remaining = PanelHelper::positiveCellValue(tableItem->text(), item.remaining, 1, AppConstants::kMaxRepeatCount);
         break;
     case 2:
-        item.repeatCount = positiveCellValue(tableItem->text(), item.repeatCount, 1, 9999);
+        item.repeatCount = PanelHelper::positiveCellValue(tableItem->text(), item.repeatCount, 1, AppConstants::kMaxRepeatCount);
         item.remaining = item.repeatCount;
         break;
     case 3:
-        item.intervalMs = positiveCellValue(tableItem->text(), item.intervalMs, 10, 600000);
+        item.intervalMs = PanelHelper::positiveCellValue(tableItem->text(), item.intervalMs, AppConstants::kMinIntervalMs, AppConstants::kMaxIntervalMs);
         break;
     case 7: {
-        const QString displayText = queueTextFromVisible(tableItem->text());
+        const QString displayText = PanelHelper::queueTextFromVisible(tableItem->text());
         if (displayText.isEmpty()) {
             refreshSendQueueTable();
             return;
@@ -605,12 +594,15 @@ void NetworkPanel::onQueueSendRequested(const QByteArray& payload,
     }
 
     m_txByteCount += static_cast<uint64_t>(written);
-    appendLine(QStringLiteral("队列发送 %1 字节: %2")
-                   .arg(written)
-                   .arg(displayText.isEmpty()
-                            ? displayTextForBytes(payload.left(static_cast<int>(written)))
-                            : displayText),
-               QColor(QStringLiteral("#89b4fa")));
+    const QByteArray sentData = payload.left(static_cast<int>(written));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::Tx;
+    record.payload = sentData;
+    record.text = displayText.isEmpty() ? displayTextForBytes(sentData) : displayText;
+    record.protocol = QStringLiteral("队列发送");
+    m_recordStore->addRecord(record);
     updateStatistics();
 }
 
@@ -650,7 +642,7 @@ void NetworkPanel::updateSendQueueStatus(int pendingItems, int pendingSends, boo
 
 void NetworkPanel::onClearClicked()
 {
-    ui->rxEdit->clear();
+    m_recordStore->clear();
     m_rxByteCount = 0;
     m_txByteCount = 0;
     ui->lastPeerLabel->setText(tr("最近来源: -"));
@@ -663,7 +655,13 @@ void NetworkPanel::onOpened()
     updateStatusIndicator(true);
     setConfigurationControlsEnabled(false);
     updateSendQueueStatus(m_sendQueue->pendingItemCount(), m_sendQueue->pendingSendCount(), m_sendQueue->isRunning());
-    appendLine(QStringLiteral("已打开: %1").arg(endpointText()), QColor(QStringLiteral("#a6e3a1")));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::System;
+    record.text = QStringLiteral("已打开: %1").arg(endpointText());
+    record.protocol = QStringLiteral("系统");
+    m_recordStore->addRecord(record);
     emit connectionStateChanged(true);
 }
 
@@ -672,7 +670,13 @@ void NetworkPanel::onClosed()
     m_sendQueue->stop();
     updateStatusIndicator(false);
     setConfigurationControlsEnabled(true);
-    appendLine(QStringLiteral("已关闭: %1").arg(modeText()), QColor(QStringLiteral("#a6adc8")));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::System;
+    record.text = QStringLiteral("已关闭: %1").arg(modeText());
+    record.protocol = QStringLiteral("系统");
+    m_recordStore->addRecord(record);
     emit connectionStateChanged(false);
 }
 
@@ -680,15 +684,28 @@ void NetworkPanel::onDataReceived(const QByteArray& payload, const QString& peer
 {
     m_rxByteCount += static_cast<uint64_t>(payload.size());
     ui->lastPeerLabel->setText(tr("最近来源: %1").arg(peer));
-    appendLine(QStringLiteral("接收 [%1] %2").arg(peer, displayTextForBytes(payload)),
-               QColor(QStringLiteral("#cdd6f4")));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::Rx;
+    record.payload = payload;
+    record.text = displayTextForBytes(payload);
+    record.protocol = QStringLiteral("接收");
+    record.info = peer;
+    m_recordStore->addRecord(record);
     updateStatistics();
 }
 
 void NetworkPanel::onNetworkError(const QString& message)
 {
     ui->errorLabel->setText(tr("最近错误: %1").arg(message));
-    appendLine(QStringLiteral("错误: %1").arg(message), QColor(QStringLiteral("#f38ba8")));
+
+    SerialRecord record;
+    record.timestamp = QDateTime::currentDateTime();
+    record.direction = SerialRecordDirection::System;
+    record.text = tr("网口错误: %1").arg(message);
+    record.error = message;
+    m_recordStore->addRecord(record);
 }
 
 void NetworkPanel::onPeerListChanged(const QStringList& peers)
@@ -729,11 +746,13 @@ void NetworkPanel::updateStatusIndicator(bool connected)
 {
     if (connected) {
         ui->statusIndicator->setStyleSheet(
-            "background-color: #a6e3a1; border-radius: 8px; border: 2px solid #45475a;");
+            QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
+                .arg(ThemeColors::Dark::statusConnected(), ThemeColors::Dark::statusBorder()));
         ui->statusLabel->setText(tr("已打开"));
     } else {
         ui->statusIndicator->setStyleSheet(
-            "background-color: #f38ba8; border-radius: 8px; border: 2px solid #45475a;");
+            QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
+                .arg(ThemeColors::Dark::statusDisconnected(), ThemeColors::Dark::statusBorder()));
         ui->statusLabel->setText(tr("未打开"));
     }
 
@@ -849,26 +868,12 @@ QString NetworkPanel::currentEncoding() const
 
 QByteArray NetworkPanel::encodeText(const QString& text) const
 {
-    const QString encoding = currentEncoding();
-    if (encoding == QStringLiteral("GBK")) {
-        return text.toLocal8Bit();
-    }
-    if (encoding == QStringLiteral("ASCII")) {
-        return text.toLatin1();
-    }
-    return text.toUtf8();
+    return EncodingCodec::encodeText(text, currentEncoding());
 }
 
 QString NetworkPanel::decodeBytes(const QByteArray& data) const
 {
-    const QString encoding = currentEncoding();
-    if (encoding == QStringLiteral("GBK")) {
-        return QString::fromLocal8Bit(data);
-    }
-    if (encoding == QStringLiteral("ASCII")) {
-        return QString::fromLatin1(data);
-    }
-    return QString::fromUtf8(data);
+    return EncodingCodec::decodeBytes(data, currentEncoding());
 }
 
 QString NetworkPanel::displayTextForBytes(const QByteArray& data) const
@@ -900,4 +905,174 @@ QString NetworkPanel::endpointText() const
         .arg(ui->localPortSpin->value())
         .arg(ui->remoteHostEdit->text().trimmed())
         .arg(ui->remotePortSpin->value());
+}
+
+// ── 过滤 ──────────────────────────────────────────────────────────────────
+
+void NetworkPanel::onFilterChanged()
+{
+    m_recordStore->setFilterPattern(m_filterEdit ? m_filterEdit->text() : QString());
+    m_recordStore->setFilterRegex(m_filterRegexCheck && m_filterRegexCheck->isChecked());
+    m_recordStore->setFilterHide(m_filterHideCheck && m_filterHideCheck->isChecked());
+    refreshRecordView();
+}
+
+// ── 记录管理 ──────────────────────────────────────────────────────────────
+
+void NetworkPanel::refreshRecordView()
+{
+    ui->rxEdit->clear();
+    for (const auto& record : m_recordStore->records()) {
+        const bool matchedFilter = m_recordStore->matchesFilter(record);
+        if (!m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
+        appendRecordToReceive(record, matchedFilter);
+    }
+}
+
+void NetworkPanel::appendRecordToReceive(const SerialRecord& record, bool matchedFilter)
+{
+    QString line;
+    if (ui->timestampCheck->isChecked()) {
+        line += QStringLiteral("[%1] ").arg(record.timestamp.toString(QStringLiteral("hh:mm:ss.zzz")));
+    }
+    line += QStringLiteral("%1 ").arg(RecordStore::directionText(record.direction));
+
+    if (!record.protocol.isEmpty()) {
+        line += QStringLiteral("(%1) ").arg(record.protocol);
+    }
+
+    if (!record.error.isEmpty()) {
+        line += QStringLiteral("错误: %1").arg(record.error);
+    } else {
+        line += record.text;
+        if (!record.info.isEmpty()) {
+            line += QStringLiteral("  [%1]").arg(record.info);
+        }
+    }
+
+    // 颜色
+    QString color = ThemeColors::Dark::rxDefault();
+    if (record.direction == SerialRecordDirection::Tx) {
+        color = ThemeColors::Dark::txDisplay();
+    } else if (!record.error.isEmpty()) {
+        color = ThemeColors::Dark::errorDisplay();
+    } else if (matchedFilter && m_filterEdit && !m_filterEdit->text().trimmed().isEmpty()) {
+        color = ThemeColors::Dark::filterMatch();
+    } else if (record.direction == SerialRecordDirection::System) {
+        color = ThemeColors::Dark::systemDisplay();
+    }
+
+    ui->rxEdit->append(QStringLiteral("<span style=\"color:%1;\">%2</span>")
+                           .arg(color, line.toHtmlEscaped()));
+
+    if (ui->autoScrollCheck->isChecked()) {
+        QScrollBar* scrollBar = ui->rxEdit->verticalScrollBar();
+        scrollBar->setValue(scrollBar->maximum());
+    }
+}
+
+// ── 日志导出 ──────────────────────────────────────────────────────────────
+
+void NetworkPanel::saveRecordsAsText(const QString& fileName, bool filteredOnly) const
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return;
+    }
+
+    QTextStream out(&file);
+    const auto& records = m_recordStore->records();
+    for (const auto& record : records) {
+        if (filteredOnly && !m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
+
+        QString line;
+        line += QStringLiteral("[%1] ").arg(record.timestamp.toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz")));
+        line += QStringLiteral("%1 ").arg(RecordStore::directionText(record.direction));
+
+        if (!record.protocol.isEmpty()) {
+            line += QStringLiteral("(%1) ").arg(record.protocol);
+        }
+
+        if (!record.error.isEmpty()) {
+            line += QStringLiteral("错误: %1").arg(record.error);
+        } else {
+            line += record.text;
+            if (!record.info.isEmpty()) {
+                line += QStringLiteral("  [%1]").arg(record.info);
+            }
+        }
+
+        out << line << '\n';
+    }
+}
+
+void NetworkPanel::saveRecordsAsCsv(const QString& fileName, bool filteredOnly) const
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return;
+    }
+
+    QTextStream out(&file);
+    out << "时间,方向,协议,文本,十六进制,信息,错误\n";
+    const auto& records = m_recordStore->records();
+    for (const auto& record : records) {
+        if (filteredOnly && !m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
+        out << TemplateManager::recordToCsvLine(record);
+    }
+}
+
+void NetworkPanel::saveRecordsAsJson(const QString& fileName, bool filteredOnly) const
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return;
+    }
+
+    QList<SerialRecord> exportRecords;
+    const auto& records = m_recordStore->records();
+    for (const auto& record : records) {
+        if (filteredOnly && !m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
+        exportRecords.append(record);
+    }
+
+    QJsonObject root;
+    root.insert(QStringLiteral("version"), 1);
+    root.insert(QStringLiteral("记录"), TemplateManager::recordsToJson(exportRecords));
+    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+}
+
+// ── QSplitter 布局持久化 ───────────────────────────────────────────────────
+
+QByteArray NetworkPanel::saveSplitterState() const
+{
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << ui->mainSplitter->saveState();
+    stream << ui->leftSplitter->saveState();
+    stream << ui->rightSplitter->saveState();
+    return data;
+}
+
+void NetworkPanel::restoreSplitterState(const QByteArray& state)
+{
+    if (state.isEmpty()) {
+        return;
+    }
+
+    QByteArray mainState, leftState, rightState;
+    QDataStream stream(state);
+    stream >> mainState >> leftState >> rightState;
+
+    if (!mainState.isEmpty()) ui->mainSplitter->restoreState(mainState);
+    if (!leftState.isEmpty()) ui->leftSplitter->restoreState(leftState);
+    if (!rightState.isEmpty()) ui->rightSplitter->restoreState(rightState);
 }

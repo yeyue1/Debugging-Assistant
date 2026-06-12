@@ -8,6 +8,7 @@
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QJsonObject>
+#include <QByteArray>
 
 #include "NetworkPanel.h"
 #include "SerialPanel.h"
@@ -225,6 +226,8 @@ bool MainWindow::loadSettings()
 
             NetworkPanel* panel = createNetworkPanel();
             panel->setNetworkConfig(config);
+            const QByteArray splitterState = settings.value(QStringLiteral("splitterState")).toByteArray();
+            panel->restoreSplitterState(splitterState);
             continue;
         }
 
@@ -233,6 +236,8 @@ bool MainWindow::loadSettings()
 
         SerialPanel* panel = createSerialPortPanel();
         panel->setSerialConfig(config);
+        const QByteArray splitterState = settings.value(QStringLiteral("splitterState")).toByteArray();
+        panel->restoreSplitterState(splitterState);
     }
 
     settings.endArray();
@@ -288,17 +293,19 @@ void MainWindow::saveSettings() const
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         settings.setArrayIndex(i);
-        const auto* panel = qobject_cast<SerialPanel*>(ui->tabWidget->widget(i));
+        auto* panel = qobject_cast<SerialPanel*>(ui->tabWidget->widget(i));
         if (panel) {
             settings.setValue(QStringLiteral("type"), QStringLiteral("serial"));
             panel->serialConfig().save(settings);
+            settings.setValue(QStringLiteral("splitterState"), panel->saveSplitterState());
             continue;
         }
 
-        const auto* networkPanel = qobject_cast<NetworkPanel*>(ui->tabWidget->widget(i));
+        auto* networkPanel = qobject_cast<NetworkPanel*>(ui->tabWidget->widget(i));
         if (networkPanel) {
             settings.setValue(QStringLiteral("type"), QStringLiteral("network"));
             networkPanel->networkConfig().save(settings);
+            settings.setValue(QStringLiteral("splitterState"), networkPanel->saveSplitterState());
         }
     }
 

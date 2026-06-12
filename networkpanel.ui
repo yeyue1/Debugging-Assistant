@@ -357,6 +357,38 @@
            </layout>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="filterLayout">
+            <item>
+             <widget class="QLabel" name="filterLabel">
+              <property name="text">
+               <string>过滤:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="filterEdit">
+              <property name="placeholderText">
+               <string>关键字、十六进制、信息或正则</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="filterRegexCheck">
+              <property name="text">
+               <string>正则</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="filterHideCheck">
+              <property name="text">
+               <string>隐藏未匹配</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <widget class="QTextEdit" name="rxEdit">
             <property name="readOnly">
              <bool>true</bool>
@@ -375,7 +407,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>350</height>
+           <height>16777215</height>
           </size>
          </property>
          <property name="title">
@@ -732,6 +764,40 @@
          <property name="childrenCollapsible">
           <bool>false</bool>
          </property>
+        <widget class="QGroupBox" name="deviceInfoGroup">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>120</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>设备信息</string>
+         </property>
+         <layout class="QVBoxLayout" name="deviceInfoLayout">
+          <item>
+           <widget class="QLabel" name="deviceInfoLabel">
+            <property name="text">
+             <string>设备: -</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="healthStatusLabel">
+            <property name="text">
+             <string>健康: -</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="statsInfoLabel">
+            <property name="text">
+             <string>统计: -</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QGroupBox" name="peerGroup">
          <property name="minimumSize">
           <size>

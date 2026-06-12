@@ -45,6 +45,9 @@ public:
     QJsonObject connectionTemplate() const;
     bool applyConnectionTemplate(const QJsonObject& object, bool includePortName = true);
 
+    QByteArray saveSplitterState() const;
+    void restoreSplitterState(const QByteArray& state);
+
 signals:
     void connectionStateChanged(bool connected);
     void panelDestroyed(const QString& portName);
@@ -126,9 +129,9 @@ private:
     void setConfigurationControlsEnabled(bool enabled);
     void addRecord(const SerialRecord& record);
     void handleAutoReply(const SerialRecord& record);
-    void saveRecordsAsText(const QString& fileName) const;
-    void saveRecordsAsCsv(const QString& fileName) const;
-    void saveRecordsAsJson(const QString& fileName) const;
+    void saveRecordsAsText(const QString& fileName, bool filteredOnly) const;
+    void saveRecordsAsCsv(const QString& fileName, bool filteredOnly) const;
+    void saveRecordsAsJson(const QString& fileName, bool filteredOnly) const;
     void applyTemplateObject(const QJsonObject& object, bool includePortName);
 
     Ui::SerialPanel* ui = nullptr;

@@ -7,12 +7,15 @@
 
 #include "NetworkConfig.h"
 #include "SendQueue.h"
+#include "SerialRecord.h"
 
 namespace Ui { class NetworkPanel; }
 
 class NetworkManager;
+class RecordStore;
 class QColor;
 class QLabel;
+class QLineEdit;
 class QPushButton;
 class QCheckBox;
 class QSpinBox;
@@ -32,6 +35,9 @@ public:
     QString connectionName() const;
     NetworkConfig networkConfig() const;
     void setNetworkConfig(const NetworkConfig& config);
+
+    QByteArray saveSplitterState() const;
+    void restoreSplitterState(const QByteArray& state);
 
 signals:
     void connectionStateChanged(bool connected);
@@ -64,6 +70,7 @@ private slots:
                               quint16 remotePort,
                               const QString& peer);
     void updateSendQueueStatus(int pendingItems, int pendingSends, bool running);
+    void onFilterChanged();
 
 private:
     void setupUiFromForm();
@@ -87,9 +94,15 @@ private:
     QString displayTextForBytes(const QByteArray& data) const;
     QString modeText() const;
     QString endpointText() const;
+    void appendRecordToReceive(const SerialRecord& record, bool matchedFilter);
+    void refreshRecordView();
+    void saveRecordsAsText(const QString& fileName, bool filteredOnly) const;
+    void saveRecordsAsCsv(const QString& fileName, bool filteredOnly) const;
+    void saveRecordsAsJson(const QString& fileName, bool filteredOnly) const;
 
     Ui::NetworkPanel* ui = nullptr;
     NetworkManager* m_network = nullptr;
+    RecordStore* m_recordStore = nullptr;
     SendQueue* m_sendQueue = nullptr;
     QTimer* m_timerSendTimer = nullptr;
     QLabel* m_sendPreviewLabel = nullptr;
@@ -104,6 +117,9 @@ private:
     QPushButton* m_startQueueButton = nullptr;
     QPushButton* m_stopQueueButton = nullptr;
     QTableWidget* m_queueTable = nullptr;
+    QLineEdit* m_filterEdit = nullptr;
+    QCheckBox* m_filterRegexCheck = nullptr;
+    QCheckBox* m_filterHideCheck = nullptr;
     uint64_t m_rxByteCount = 0;
     uint64_t m_txByteCount = 0;
     bool m_updatingQueueTable = false;

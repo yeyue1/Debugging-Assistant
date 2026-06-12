@@ -92,7 +92,18 @@
    <addaction name="separator"/>
    <addaction name="applySerialConfigAction"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <widget class="QLabel" name="statusConnectionLabel">
+    <property name="text">
+     <string>连接: 0</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="statusTrafficLabel">
+    <property name="text">
+     <string>总流量: 0 B</string>
+    </property>
+   </widget>
+  </widget>
   <action name="addPortAction">
    <property name="text">
     <string>增加串口(&amp;A)</string>

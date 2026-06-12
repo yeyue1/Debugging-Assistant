@@ -32,15 +32,21 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QSplitter>
 
+#include "AppConstants.h"
 #include "SerialManager.h"
 #include "SerialConfig.h"
 #include "DeviceRegistry.h"
 #include "RecordStore.h"
 #include "AutomationRuleEngine.h"
 #include "TemplateManager.h"
+#include "ThemeColors.h"
 #include "ParserController.h"
 #include "SendQueue.h"
+#include "PanelHelper.h"
+#include "EncodingCodec.h"
+#include "NewLineHelper.h"
 
 namespace {
 
@@ -50,68 +56,6 @@ void selectComboData(QComboBox* combo, int value)
     if (index >= 0) {
         combo->setCurrentIndex(index);
     }
-}
-
-void insertAfter(QBoxLayout* layout, QWidget* anchor, QWidget* widget)
-{
-    const int index = layout ? layout->indexOf(anchor) : -1;
-    if (index >= 0) {
-        layout->insertWidget(index + 1, widget);
-    } else if (layout) {
-        layout->addWidget(widget);
-    }
-}
-
-QToolButton* createMenuButton(QWidget* parent, const QString& text)
-{
-    auto* button = new QToolButton(parent);
-    button->setText(text);
-    button->setPopupMode(QToolButton::InstantPopup);
-    button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    return button;
-}
-
-QTableWidgetItem* readOnlyTableItem(const QString& text)
-{
-    auto* item = new QTableWidgetItem(text);
-    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-    return item;
-}
-
-QTableWidgetItem* editableTableItem(const QString& text)
-{
-    return new QTableWidgetItem(text);
-}
-
-QString visibleQueueText(QString text)
-{
-    text.replace(QLatin1Char('\r'), QStringLiteral("\\r"));
-    text.replace(QLatin1Char('\n'), QStringLiteral("\\n"));
-    return text;
-}
-
-QString queueTextFromVisible(QString text)
-{
-    text.replace(QStringLiteral("\\r"), QStringLiteral("\r"));
-    text.replace(QStringLiteral("\\n"), QStringLiteral("\n"));
-    return text;
-}
-
-int positiveCellValue(const QString& text, int fallback, int minimum, int maximum)
-{
-    bool ok = false;
-    const int value = text.trimmed().toInt(&ok);
-    return ok ? qBound(minimum, value, maximum) : fallback;
-}
-
-QAction* addCheckAction(QMenu* menu, const QString& text, QCheckBox* checkBox)
-{
-    QAction* action = menu->addAction(text);
-    action->setCheckable(true);
-    action->setChecked(checkBox->isChecked());
-    QObject::connect(action, &QAction::toggled, checkBox, &QCheckBox::setChecked);
-    QObject::connect(checkBox, &QCheckBox::toggled, action, &QAction::setChecked);
-    return action;
 }
 
 } // anonymous namespace
@@ -137,7 +81,7 @@ SerialPanel::SerialPanel(QWidget* parent)
     setupSendQueueControls();
 
     refreshPortList();
-    m_portScanTimer->setInterval(1000);
+    m_portScanTimer->setInterval(AppConstants::kPortScanIntervalMs);
     m_portScanTimer->start();
 }
 
@@ -231,14 +175,14 @@ void SerialPanel::setupUiFromForm()
     ui->baudCombo->addItem(QStringLiteral("230400"), 230400);
     ui->baudCombo->addItem(QStringLiteral("460800"), 460800);
     ui->baudCombo->addItem(QStringLiteral("921600"), 921600);
-    ui->baudCombo->setCurrentIndex(4);
+    ui->baudCombo->setCurrentIndex(AppConstants::kDefaultBaudIndex);
 
     // Populate data bits combo
     ui->dataBitsCombo->addItem(QStringLiteral("5"), QSerialPort::Data5);
     ui->dataBitsCombo->addItem(QStringLiteral("6"), QSerialPort::Data6);
     ui->dataBitsCombo->addItem(QStringLiteral("7"), QSerialPort::Data7);
     ui->dataBitsCombo->addItem(QStringLiteral("8"), QSerialPort::Data8);
-    ui->dataBitsCombo->setCurrentIndex(3);
+    ui->dataBitsCombo->setCurrentIndex(AppConstants::kDefaultDataBitsIndex);
 
     // Populate parity combo
     ui->parityCombo->addItem(tr("无"), QSerialPort::NoParity);
@@ -269,7 +213,8 @@ void SerialPanel::setupUiFromForm()
     ui->encodingCombo->addItem(tr("ASCII"));
 
     // Status indicator initial state
-    ui->statusIndicator->setStyleSheet("background-color: #f38ba8; border-radius: 6px;");
+    ui->statusIndicator->setStyleSheet(QStringLiteral("background-color: %1; border-radius: 8px;")
+                                           .arg(ThemeColors::Dark::statusDisconnected()));
     bindFeatureUi();
     setConnectionControls(false);
 }
@@ -407,10 +352,10 @@ void SerialPanel::setupActionMenus()
     ui->clearHistoryButton->hide();
     ui->timerSendInterval->setPrefix(tr("间隔 "));
 
-    auto* connectionButton = createMenuButton(this, tr("串口操作"));
+    auto* connectionButton = PanelHelper::createMenuButton(this, tr("串口操作"));
     auto* connectionMenu = new QMenu(connectionButton);
-    addCheckAction(connectionMenu, tr("DTR"), ui->dtrCheck);
-    addCheckAction(connectionMenu, tr("RTS"), ui->rtsCheck);
+    PanelHelper::addCheckAction(connectionMenu, tr("DTR"), ui->dtrCheck);
+    PanelHelper::addCheckAction(connectionMenu, tr("RTS"), ui->rtsCheck);
     connectionMenu->addSeparator();
     connectionMenu->addAction(tr("保存别名"), this, &SerialPanel::onSaveDeviceAliasClicked);
     connectionMenu->addAction(tr("一键复连"), this, &SerialPanel::onReconnectClicked);
@@ -420,26 +365,26 @@ void SerialPanel::setupActionMenus()
     connectionMenu->addSeparator();
     connectionMenu->addAction(tr("清空接收区"), this, &SerialPanel::onClearClicked);
     connectionButton->setMenu(connectionMenu);
-    insertAfter(ui->stateRowLayout, ui->closeButton, connectionButton);
+    PanelHelper::insertAfter(ui->stateRowLayout, ui->closeButton, connectionButton);
 
-    auto* displayButton = createMenuButton(this, tr("显示设置"));
+    auto* displayButton = PanelHelper::createMenuButton(this, tr("显示设置"));
     auto* displayMenu = new QMenu(displayButton);
-    addCheckAction(displayMenu, tr("十六进制显示"), ui->hexCheck);
-    addCheckAction(displayMenu, tr("自动滚动"), ui->autoScrollCheck);
-    addCheckAction(displayMenu, tr("时间戳"), ui->timestampCheck);
+    PanelHelper::addCheckAction(displayMenu, tr("十六进制显示"), ui->hexCheck);
+    PanelHelper::addCheckAction(displayMenu, tr("自动滚动"), ui->autoScrollCheck);
+    PanelHelper::addCheckAction(displayMenu, tr("时间戳"), ui->timestampCheck);
     displayButton->setMenu(displayMenu);
     ui->receiveOptionsLayout->insertWidget(0, displayButton);
 
-    auto* sendButton = createMenuButton(this, tr("发送操作"));
+    auto* sendButton = PanelHelper::createMenuButton(this, tr("发送操作"));
     auto* sendMenu = new QMenu(sendButton);
-    addCheckAction(sendMenu, tr("定时发送"), ui->timerSendCheck);
+    PanelHelper::addCheckAction(sendMenu, tr("定时发送"), ui->timerSendCheck);
     sendMenu->addSeparator();
     sendMenu->addAction(tr("发送文件"), this, &SerialPanel::onSendFileClicked);
     sendMenu->addAction(tr("保存数据"), this, &SerialPanel::onSaveDataClicked);
     sendButton->setMenu(sendMenu);
-    insertAfter(ui->sendButtonsLayout, ui->sendButton, sendButton);
+    PanelHelper::insertAfter(ui->sendButtonsLayout, ui->sendButton, sendButton);
 
-    auto* historyButton = createMenuButton(this, tr("历史操作"));
+    auto* historyButton = PanelHelper::createMenuButton(this, tr("历史操作"));
     auto* historyMenu = new QMenu(historyButton);
     historyMenu->addAction(tr("清空历史"), this, &SerialPanel::onClearHistoryClicked);
     historyButton->setMenu(historyMenu);
@@ -521,15 +466,15 @@ void SerialPanel::refreshSendQueueTable()
     m_queueTable->setRowCount(m_sendQueue->pendingItemCount());
     for (int row = 0; row < m_sendQueue->pendingItemCount(); ++row) {
         const SendQueue::QueueItem item = m_sendQueue->itemAt(row);
-        const QString displayText = visibleQueueText(item.displayText);
+        const QString displayText = PanelHelper::visibleQueueText(item.displayText);
 
-        m_queueTable->setItem(row, 0, readOnlyTableItem(QString::number(row + 1)));
-        m_queueTable->setItem(row, 1, editableTableItem(QString::number(item.remaining)));
-        m_queueTable->setItem(row, 2, editableTableItem(QString::number(item.repeatCount)));
-        m_queueTable->setItem(row, 3, editableTableItem(QString::number(item.intervalMs)));
-        m_queueTable->setItem(row, 4, readOnlyTableItem(QString::number(item.payload.size())));
-        m_queueTable->setItem(row, 5, readOnlyTableItem(QString::fromLatin1(item.payload.toHex(' ')).toUpper()));
-        m_queueTable->setItem(row, 6, editableTableItem(displayText));
+        m_queueTable->setItem(row, 0, PanelHelper::readOnlyTableItem(QString::number(row + 1)));
+        m_queueTable->setItem(row, 1, PanelHelper::editableTableItem(QString::number(item.remaining)));
+        m_queueTable->setItem(row, 2, PanelHelper::editableTableItem(QString::number(item.repeatCount)));
+        m_queueTable->setItem(row, 3, PanelHelper::editableTableItem(QString::number(item.intervalMs)));
+        m_queueTable->setItem(row, 4, PanelHelper::readOnlyTableItem(QString::number(item.payload.size())));
+        m_queueTable->setItem(row, 5, PanelHelper::readOnlyTableItem(QString::fromLatin1(item.payload.toHex(' ')).toUpper()));
+        m_queueTable->setItem(row, 6, PanelHelper::editableTableItem(displayText));
     }
 
     m_queueTable->resizeColumnsToContents();
@@ -641,12 +586,7 @@ void SerialPanel::onSendClicked()
         return;
     }
 
-    switch (m_newLineMode) {
-    case 1: text += "\n"; break;
-    case 2: text += "\r\n"; break;
-    case 3: text += "\r"; break;
-    default: break;
-    }
+    NewLineHelper::appendNewLine(text, m_newLineMode);
 
     sendPayload(encodeText(text), ui->txEdit->toPlainText(), true);
 }
@@ -753,7 +693,8 @@ void SerialPanel::onSerialError(QSerialPort::SerialPortError code, const QString
 
     setConnectionControls(m_serial->isOpen());
     ui->statusIndicator->setStyleSheet(
-        "background-color: #f38ba8; border-radius: 8px; border: 2px solid #45475a;");
+        QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
+            .arg(ThemeColors::Dark::statusDisconnected(), ThemeColors::Dark::statusBorder()));
     ui->statusLabel->setText(tr("错误: %1").arg(message));
     ui->statusLabel->setObjectName("statusDisconnected");
     ui->statusLabel->style()->unpolish(ui->statusLabel);
@@ -829,15 +770,15 @@ void SerialPanel::appendRecordToReceive(const SerialRecord& record, bool matched
     }
 
     // 颜色
-    QString color = QStringLiteral("#cdd6f4");
+    QString color = ThemeColors::Dark::rxDefault();
     if (record.direction == SerialRecordDirection::Tx) {
-        color = QStringLiteral("#89b4fa");
+        color = ThemeColors::Dark::txDisplay();
     } else if (!record.error.isEmpty()) {
-        color = QStringLiteral("#f38ba8");
+        color = ThemeColors::Dark::errorDisplay();
     } else if (matchedFilter && m_filterEdit && !m_filterEdit->text().trimmed().isEmpty()) {
-        color = QStringLiteral("#f9e2af");
+        color = ThemeColors::Dark::filterMatch();
     } else if (record.direction == SerialRecordDirection::System) {
-        color = QStringLiteral("#a6adc8");
+        color = ThemeColors::Dark::systemDisplay();
     }
 
     ui->rxEdit->append(QStringLiteral("<span style=\"color:%1;\">%2</span>")
@@ -863,19 +804,14 @@ void SerialPanel::handleAutoReply(const SerialRecord& record)
     }
 
     QString text = reply;
-    switch (m_newLineMode) {
-    case 1: text += "\n"; break;
-    case 2: text += "\r\n"; break;
-    case 3: text += "\r"; break;
-    default: break;
-    }
+    NewLineHelper::appendNewLine(text, m_newLineMode);
 
     sendPayload(encodeText(text), reply, false);
 }
 
 // ── 日志导出 ──────────────────────────────────────────────────────────────
 
-void SerialPanel::saveRecordsAsText(const QString& fileName) const
+void SerialPanel::saveRecordsAsText(const QString& fileName, bool filteredOnly) const
 {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -883,10 +819,34 @@ void SerialPanel::saveRecordsAsText(const QString& fileName) const
     }
 
     QTextStream out(&file);
-    out << ui->rxEdit->toPlainText();
+    const auto& records = m_recordStore->records();
+    for (const auto& record : records) {
+        if (filteredOnly && !m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
+
+        QString line;
+        line += QStringLiteral("[%1] ").arg(record.timestamp.toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz")));
+        line += QStringLiteral("%1 ").arg(RecordStore::directionText(record.direction));
+
+        if (!record.protocol.isEmpty()) {
+            line += QStringLiteral("(%1) ").arg(record.protocol);
+        }
+
+        if (!record.error.isEmpty()) {
+            line += QStringLiteral("错误: %1").arg(record.error);
+        } else {
+            line += record.text;
+            if (!record.info.isEmpty()) {
+                line += QStringLiteral("  [%1]").arg(record.info);
+            }
+        }
+
+        out << line << '\n';
+    }
 }
 
-void SerialPanel::saveRecordsAsCsv(const QString& fileName) const
+void SerialPanel::saveRecordsAsCsv(const QString& fileName, bool filteredOnly) const
 {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -897,20 +857,32 @@ void SerialPanel::saveRecordsAsCsv(const QString& fileName) const
     out << "时间,方向,协议,文本,十六进制,信息,错误\n";
     const auto& records = m_recordStore->records();
     for (const auto& record : records) {
+        if (filteredOnly && !m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
         out << TemplateManager::recordToCsvLine(record);
     }
 }
 
-void SerialPanel::saveRecordsAsJson(const QString& fileName) const
+void SerialPanel::saveRecordsAsJson(const QString& fileName, bool filteredOnly) const
 {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         return;
     }
 
+    QList<SerialRecord> exportRecords;
+    const auto& records = m_recordStore->records();
+    for (const auto& record : records) {
+        if (filteredOnly && !m_recordStore->shouldDisplayRecord(record)) {
+            continue;
+        }
+        exportRecords.append(record);
+    }
+
     QJsonObject root;
     root.insert(QStringLiteral("version"), 1);
-    root.insert(QStringLiteral("记录"), TemplateManager::recordsToJson(m_recordStore->records()));
+    root.insert(QStringLiteral("记录"), TemplateManager::recordsToJson(exportRecords));
     file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
 }
 
@@ -977,12 +949,7 @@ void SerialPanel::onAddQueueClicked()
     }
 
     QString text = displayText;
-    switch (m_newLineMode) {
-    case 1: text += "\n"; break;
-    case 2: text += "\r\n"; break;
-    case 3: text += "\r"; break;
-    default: break;
-    }
+    NewLineHelper::appendNewLine(text, m_newLineMode);
 
     const QByteArray payload = encodeText(text);
     if (payload.isEmpty()) {
@@ -1006,12 +973,7 @@ void SerialPanel::onInsertQueueClicked()
     }
 
     QString text = displayText;
-    switch (m_newLineMode) {
-    case 1: text += "\n"; break;
-    case 2: text += "\r\n"; break;
-    case 3: text += "\r"; break;
-    default: break;
-    }
+    NewLineHelper::appendNewLine(text, m_newLineMode);
 
     const QByteArray payload = encodeText(text);
     if (payload.isEmpty()) {
@@ -1069,29 +1031,24 @@ void SerialPanel::onQueueTableItemChanged(QTableWidgetItem* tableItem)
 
     switch (tableItem->column()) {
     case 1:
-        item.remaining = positiveCellValue(tableItem->text(), item.remaining, 1, 9999);
+        item.remaining = PanelHelper::positiveCellValue(tableItem->text(), item.remaining, 1, AppConstants::kMaxRepeatCount);
         break;
     case 2:
-        item.repeatCount = positiveCellValue(tableItem->text(), item.repeatCount, 1, 9999);
+        item.repeatCount = PanelHelper::positiveCellValue(tableItem->text(), item.repeatCount, 1, AppConstants::kMaxRepeatCount);
         item.remaining = item.repeatCount;
         break;
     case 3:
-        item.intervalMs = positiveCellValue(tableItem->text(), item.intervalMs, 10, 600000);
+        item.intervalMs = PanelHelper::positiveCellValue(tableItem->text(), item.intervalMs, AppConstants::kMinIntervalMs, AppConstants::kMaxIntervalMs);
         break;
     case 6: {
-        const QString displayText = queueTextFromVisible(tableItem->text());
+        const QString displayText = PanelHelper::queueTextFromVisible(tableItem->text());
         if (displayText.isEmpty()) {
             refreshSendQueueTable();
             return;
         }
 
         QString text = displayText;
-        switch (m_newLineMode) {
-        case 1: text += "\n"; break;
-        case 2: text += "\r\n"; break;
-        case 3: text += "\r"; break;
-        default: break;
-        }
+        NewLineHelper::appendNewLine(text, m_newLineMode);
 
         const QByteArray payload = encodeText(text);
         if (payload.isEmpty()) {
@@ -1360,13 +1317,23 @@ void SerialPanel::onSaveDataClicked()
         return;
     }
 
+    // 导出选项对话框
+    QMessageBox exportBox(this);
+    exportBox.setWindowTitle(tr("导出范围"));
+    exportBox.setText(tr("选择导出范围:"));
+    QPushButton* allButton = exportBox.addButton(tr("全部记录"), QMessageBox::AcceptRole);
+    exportBox.addButton(tr("当前过滤结果"), QMessageBox::RejectRole);
+    exportBox.exec();
+
+    const bool filteredOnly = exportBox.clickedButton() != allButton;
+
     const QString suffix = QFileInfo(fileName).suffix().toLower();
     if (suffix == QStringLiteral("json")) {
-        saveRecordsAsJson(fileName);
+        saveRecordsAsJson(fileName, filteredOnly);
     } else if (suffix == QStringLiteral("csv")) {
-        saveRecordsAsCsv(fileName);
+        saveRecordsAsCsv(fileName, filteredOnly);
     } else {
-        saveRecordsAsText(fileName);
+        saveRecordsAsText(fileName, filteredOnly);
     }
 }
 
@@ -1412,12 +1379,7 @@ void SerialPanel::updateSendPreview()
     }
 
     QString text = ui->txEdit->toPlainText();
-    switch (m_newLineMode) {
-    case 1: text += "\n"; break;
-    case 2: text += "\r\n"; break;
-    case 3: text += "\r"; break;
-    default: break;
-    }
+    NewLineHelper::appendNewLine(text, m_newLineMode);
 
     m_sendPreviewLabel->setText(tr("发送预估: %1 B").arg(encodeText(text).size()));
 }
@@ -1443,12 +1405,14 @@ void SerialPanel::updateStatusIndicator(bool connected)
 {
     if (connected) {
         ui->statusIndicator->setStyleSheet(
-            "background-color: #a6e3a1; border-radius: 8px; border: 2px solid #45475a;");
+            QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
+                .arg(ThemeColors::Dark::statusConnected(), ThemeColors::Dark::statusBorder()));
         ui->statusLabel->setText(tr("已连接"));
         ui->statusLabel->setObjectName("statusConnected");
     } else {
         ui->statusIndicator->setStyleSheet(
-            "background-color: #f38ba8; border-radius: 8px; border: 2px solid #45475a;");
+            QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
+                .arg(ThemeColors::Dark::statusDisconnected(), ThemeColors::Dark::statusBorder()));
         ui->statusLabel->setText(tr("未连接"));
         ui->statusLabel->setObjectName("statusDisconnected");
     }
@@ -1471,7 +1435,7 @@ void SerialPanel::addToHistory(const QString& text)
     m_sendHistory.prepend(text);
     ui->historyList->insertItem(0, text);
 
-    while (m_sendHistory.size() > 50) {
+    while (m_sendHistory.size() > AppConstants::kMaxHistoryItems) {
         m_sendHistory.removeLast();
         delete ui->historyList->takeItem(ui->historyList->count() - 1);
     }
@@ -1479,24 +1443,12 @@ void SerialPanel::addToHistory(const QString& text)
 
 QString SerialPanel::decodeBytes(const QByteArray& data) const
 {
-    if (m_encoding == "GBK") {
-        return QString::fromLocal8Bit(data);
-    }
-    if (m_encoding == "ASCII") {
-        return QString::fromLatin1(data);
-    }
-    return QString::fromUtf8(data);
+    return EncodingCodec::decodeBytes(data, m_encoding);
 }
 
 QByteArray SerialPanel::encodeText(const QString& text) const
 {
-    if (m_encoding == "GBK") {
-        return text.toLocal8Bit();
-    }
-    if (m_encoding == "ASCII") {
-        return text.toLatin1();
-    }
-    return text.toUtf8();
+    return EncodingCodec::encodeText(text, m_encoding);
 }
 
 QString SerialPanel::displayTextForPayload(const QByteArray& data) const
@@ -1505,4 +1457,37 @@ QString SerialPanel::displayTextForPayload(const QByteArray& data) const
         return RecordStore::bytesToHex(data);
     }
     return decodeBytes(data);
+}
+
+// ── QSplitter 布局持久化 ───────────────────────────────────────────────────
+
+QByteArray SerialPanel::saveSplitterState() const
+{
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << ui->rootSplitter->saveState();
+    stream << ui->connectionSplitter->saveState();
+    stream << ui->mainSplitter->saveState();
+    stream << ui->leftSplitter->saveState();
+    stream << ui->sendContentSplitter->saveState();
+    stream << ui->rightSplitter->saveState();
+    return data;
+}
+
+void SerialPanel::restoreSplitterState(const QByteArray& state)
+{
+    if (state.isEmpty()) {
+        return;
+    }
+
+    QByteArray rootState, connState, mainState, leftState, sendState, rightState;
+    QDataStream stream(state);
+    stream >> rootState >> connState >> mainState >> leftState >> sendState >> rightState;
+
+    if (!rootState.isEmpty()) ui->rootSplitter->restoreState(rootState);
+    if (!connState.isEmpty()) ui->connectionSplitter->restoreState(connState);
+    if (!mainState.isEmpty()) ui->mainSplitter->restoreState(mainState);
+    if (!leftState.isEmpty()) ui->leftSplitter->restoreState(leftState);
+    if (!sendState.isEmpty()) ui->sendContentSplitter->restoreState(sendState);
+    if (!rightState.isEmpty()) ui->rightSplitter->restoreState(rightState);
 }
