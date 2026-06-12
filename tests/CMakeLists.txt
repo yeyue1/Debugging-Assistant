@@ -1,10 +1,9 @@
 # tests/CMakeLists.txt
 # 自动化测试框架配置
 
-# 宏：添加一个测试目标（禁用 AUTOMOC，因为测试文件手动 #include *.moc）
+# 宏：添加一个测试目标
 macro(add_serial_test TEST_NAME TEST_SOURCE)
     add_executable(${TEST_NAME} ${TEST_SOURCE} ${ARGN})
-    set_target_properties(${TEST_NAME} PROPERTIES AUTOMOC OFF)
     target_link_libraries(${TEST_NAME} PRIVATE
         Qt${QT_VERSION_MAJOR}::Test
         Qt${QT_VERSION_MAJOR}::Core
