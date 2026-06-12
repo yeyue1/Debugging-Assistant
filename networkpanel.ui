@@ -708,10 +708,12 @@
               <property name="enabled">
                <bool>false</bool>
               </property>
-              <property name="maximumSize">
+              <property name="minimumSize">
                <size>
-                <width>100</width>
-                <height>16777215</height>
+                <width>110</width>
+                <height>0</height>
+               </size>
+              </property>
                </size>
               </property>
               <property name="minimum">
