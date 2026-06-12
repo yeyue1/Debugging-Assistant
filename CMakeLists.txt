@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort Network)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort Network)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort Network Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort Network Test)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -43,6 +43,7 @@ set(PROJECT_SOURCES
         NetworkPanel.h
         networkpanel.ui
         ProtocolParserBase.h
+        ProtocolParserBase.cpp
         ProtocolParser.cpp
         ProtocolParser.h
         RawDataParser.cpp
@@ -51,6 +52,11 @@ set(PROJECT_SOURCES
         TextDataParser.h
         ThemeManager.cpp
         ThemeManager.h
+        PanelHelper.h
+        EncodingCodec.h
+        NewLineHelper.h
+        ThemeColors.h
+        AppConstants.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -93,3 +99,7 @@ install(TARGETS serial_prot
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(serial_prot)
 endif()
+
+# 测试支持
+enable_testing()
+add_subdirectory(tests)
