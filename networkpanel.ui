@@ -563,6 +563,38 @@
               </property>
              </spacer>
             </item>
+            <item>
+             <widget class="QCheckBox" name="timerSendCheck">
+              <property name="text">
+               <string>定时发送</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="timerSendInterval">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>110</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="minimum">
+               <number>100</number>
+              </property>
+              <property name="maximum">
+               <number>60000</number>
+              </property>
+              <property name="value">
+               <number>1000</number>
+              </property>
+              <property name="suffix">
+               <string> ms</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -695,38 +727,6 @@
                <enum>Qt::Horizontal</enum>
               </property>
              </spacer>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="timerSendCheck">
-              <property name="text">
-               <string>定时发送</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="timerSendInterval">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>110</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="minimum">
-               <number>100</number>
-              </property>
-              <property name="maximum">
-               <number>60000</number>
-              </property>
-              <property name="value">
-               <number>1000</number>
-              </property>
-              <property name="suffix">
-               <string> ms</string>
-              </property>
-             </widget>
             </item>
            </layout>
           </item>
