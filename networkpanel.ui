@@ -714,8 +714,6 @@
                 <height>0</height>
                </size>
               </property>
-               </size>
-              </property>
               <property name="minimum">
                <number>100</number>
               </property>
