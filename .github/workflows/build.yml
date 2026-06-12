@@ -20,7 +20,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_mingw'
-        tools: 'tools_mingw qt.tools.win64_mingw'
+        tools: 'tools_mingw'
 
     - name: Configure
       run: cmake -B build -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
