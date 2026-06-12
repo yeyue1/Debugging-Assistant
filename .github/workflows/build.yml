@@ -21,7 +21,7 @@ jobs:
         target: 'desktop'
         arch: 'win64_mingw'
         tools: 'tools_mingw'
-        modules: 'qtsvg qtserialport'
+        modules: 'qtserialport'
 
     - name: Configure
       run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
