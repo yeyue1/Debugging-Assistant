@@ -19,86 +19,25 @@ jobs:
         version: '6.6.0'
         host: 'windows'
         target: 'desktop'
-        arch: 'win64_mingw'
-        tools: 'tools_mingw1120'
+        arch: 'win64_msvc2019_64'
         modules: 'qtserialport'
-
-    - name: Resolve Qt MinGW runtime
-      shell: pwsh
-      run: |
-        $qtPrefix = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $env:Qt6_DIR))
-        $qtBin = Join-Path $qtPrefix 'bin'
-        $toolchains = Get-ChildItem -Path $env:RUNNER_WORKSPACE -Filter g++.exe -Recurse |
-          Where-Object { $_.FullName -match 'mingw.*[\\/]bin[\\/]g\+\+\.exe$' } |
-          ForEach-Object {
-            $machineOutput = & $_.FullName -dumpmachine 2>$null
-            $versionOutput = & $_.FullName -dumpfullversion 2>$null
-            if (-not $versionOutput) {
-              $versionOutput = (& $_.FullName --version 2>$null | Select-Object -First 1)
-            }
-
-            $machine = [string]($machineOutput | Select-Object -First 1)
-            $version = [string]($versionOutput | Select-Object -First 1)
-            $parsedVersion = $null
-            [void][System.Version]::TryParse($version.Trim(), [ref]$parsedVersion)
-
-            [PSCustomObject]@{
-              Path = $_.FullName
-              Bin = Split-Path -Parent $_.FullName
-              Machine = $machine.Trim()
-              Version = $version.Trim()
-              ParsedVersion = $parsedVersion
-            }
-          }
-
-        $toolchains | ForEach-Object {
-          Write-Host "Found MinGW: $($_.Path) machine=$($_.Machine) version=$($_.Version)"
-        }
-
-        $toolchain = $toolchains |
-          Where-Object {
-            $_.Machine -eq 'x86_64-w64-mingw32' -and
-            $_.ParsedVersion -and
-            $_.ParsedVersion.Major -ge 11
-          } |
-          Sort-Object ParsedVersion -Descending |
-          Select-Object -First 1
-
-        if (-not $toolchain) {
-          throw "Could not find a 64-bit MinGW 11+ toolchain installed by install-qt-action"
-        }
-
-        $mingwBin = $toolchain.Bin
-        "QT_BIN=$qtBin" | Out-File -FilePath $env:GITHUB_ENV -Append
-        "MINGW_BIN=$mingwBin" | Out-File -FilePath $env:GITHUB_ENV -Append
-        "QT_MINGW_PATH=$mingwBin;$qtBin" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-        Write-Host "Qt bin: $qtBin"
-        Write-Host "MinGW bin: $mingwBin"
-        & (Join-Path $mingwBin 'g++.exe') --version
 
     - name: Configure
       shell: pwsh
       run: |
-        $env:PATH = "$env:QT_MINGW_PATH;$env:PATH"
-        cmake -S . -B ci-build -G Ninja `
-          -DCMAKE_BUILD_TYPE=Release `
-          -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
-          -DCMAKE_C_COMPILER="$env:MINGW_BIN\gcc.exe" `
-          -DCMAKE_CXX_COMPILER="$env:MINGW_BIN\g++.exe"
+        cmake -S . -B ci-build -G "Visual Studio 17 2022" -A x64 `
+          -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
 
     - name: Build
       shell: pwsh
       run: |
-        $env:PATH = "$env:QT_MINGW_PATH;$env:PATH"
         cmake --build ci-build --config Release
 
     - name: Run Tests
       shell: pwsh
       run: |
-        $env:PATH = "$env:QT_MINGW_PATH;$env:PATH"
+        $qtPrefix = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $env:Qt6_DIR))
+        $qtBin = Join-Path $qtPrefix 'bin'
+        $env:PATH = "$qtBin;$env:PATH"
         where.exe Qt6Core.dll
-        where.exe libstdc++-6.dll
-        where.exe libgcc_s_seh-1.dll
-        where.exe libwinpthread-1.dll
-        ctest --test-dir ci-build --output-on-failure -V
+        ctest --test-dir ci-build -C Release --output-on-failure -V
