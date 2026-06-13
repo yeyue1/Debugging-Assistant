@@ -31,13 +31,19 @@ jobs:
         $toolchains = Get-ChildItem -Path $env:RUNNER_WORKSPACE -Filter g++.exe -Recurse |
           Where-Object { $_.FullName -match 'mingw.*[\\/]bin[\\/]g\+\+\.exe$' } |
           ForEach-Object {
-            $machine = (& $_.FullName -dumpmachine 2>$null).Trim()
-            $version = (& $_.FullName -dumpfullversion 2>$null).Trim()
+            $machineOutput = & $_.FullName -dumpmachine 2>$null
+            $versionOutput = & $_.FullName -dumpfullversion 2>$null
+            if (-not $versionOutput) {
+              $versionOutput = (& $_.FullName --version 2>$null | Select-Object -First 1)
+            }
+
+            $machine = [string]($machineOutput | Select-Object -First 1)
+            $version = [string]($versionOutput | Select-Object -First 1)
             [PSCustomObject]@{
               Path = $_.FullName
               Bin = Split-Path -Parent $_.FullName
-              Machine = $machine
-              Version = $version
+              Machine = $machine.Trim()
+              Version = $version.Trim()
             }
           }
 
