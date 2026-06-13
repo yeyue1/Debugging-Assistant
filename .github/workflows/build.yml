@@ -23,11 +23,50 @@ jobs:
         tools: 'tools_mingw'
         modules: 'qtserialport'
 
+    - name: Resolve Qt MinGW runtime
+      shell: pwsh
+      run: |
+        $qtPrefix = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $env:Qt6_DIR))
+        $qtBin = Join-Path $qtPrefix 'bin'
+        $gcc = Get-ChildItem -Path $env:RUNNER_WORKSPACE -Filter gcc.exe -Recurse |
+          Where-Object { $_.FullName -match 'mingw.*[\\/]bin[\\/]gcc\.exe$' -and $_.FullName -notmatch '[\\/]6\.6\.0[\\/]' } |
+          Select-Object -First 1
+
+        if (-not $gcc) {
+          throw "Could not find the MinGW toolchain installed by install-qt-action"
+        }
+
+        $mingwBin = Split-Path -Parent $gcc.FullName
+        "QT_BIN=$qtBin" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "MINGW_BIN=$mingwBin" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "QT_MINGW_PATH=$mingwBin;$qtBin" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+        Write-Host "Qt bin: $qtBin"
+        Write-Host "MinGW bin: $mingwBin"
+        & (Join-Path $mingwBin 'g++.exe') --version
+
     - name: Configure
-      run: cmake -S . -B ci-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
+      shell: pwsh
+      run: |
+        $env:PATH = "$env:QT_MINGW_PATH;$env:PATH"
+        cmake -S . -B ci-build -G Ninja `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
+          -DCMAKE_C_COMPILER="$env:MINGW_BIN\gcc.exe" `
+          -DCMAKE_CXX_COMPILER="$env:MINGW_BIN\g++.exe"
 
     - name: Build
-      run: cmake --build ci-build --config Release
+      shell: pwsh
+      run: |
+        $env:PATH = "$env:QT_MINGW_PATH;$env:PATH"
+        cmake --build ci-build --config Release
 
     - name: Run Tests
-      run: ctest --test-dir ci-build --output-on-failure -V
+      shell: pwsh
+      run: |
+        $env:PATH = "$env:QT_MINGW_PATH;$env:PATH"
+        where.exe Qt6Core.dll
+        where.exe libstdc++-6.dll
+        where.exe libgcc_s_seh-1.dll
+        where.exe libwinpthread-1.dll
+        ctest --test-dir ci-build --output-on-failure -V
