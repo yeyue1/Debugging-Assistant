@@ -20,7 +20,7 @@ jobs:
         host: 'windows'
         target: 'desktop'
         arch: 'win64_mingw'
-        tools: 'tools_mingw'
+        tools: 'tools_mingw1120'
         modules: 'qtserialport'
 
     - name: Resolve Qt MinGW runtime
@@ -39,11 +39,15 @@ jobs:
 
             $machine = [string]($machineOutput | Select-Object -First 1)
             $version = [string]($versionOutput | Select-Object -First 1)
+            $parsedVersion = $null
+            [void][System.Version]::TryParse($version.Trim(), [ref]$parsedVersion)
+
             [PSCustomObject]@{
               Path = $_.FullName
               Bin = Split-Path -Parent $_.FullName
               Machine = $machine.Trim()
               Version = $version.Trim()
+              ParsedVersion = $parsedVersion
             }
           }
 
@@ -52,12 +56,16 @@ jobs:
         }
 
         $toolchain = $toolchains |
-          Where-Object { $_.Machine -eq 'x86_64-w64-mingw32' } |
-          Sort-Object Version -Descending |
+          Where-Object {
+            $_.Machine -eq 'x86_64-w64-mingw32' -and
+            $_.ParsedVersion -and
+            $_.ParsedVersion.Major -ge 11
+          } |
+          Sort-Object ParsedVersion -Descending |
           Select-Object -First 1
 
         if (-not $toolchain) {
-          throw "Could not find a 64-bit MinGW toolchain installed by install-qt-action"
+          throw "Could not find a 64-bit MinGW 11+ toolchain installed by install-qt-action"
         }
 
         $mingwBin = $toolchain.Bin
