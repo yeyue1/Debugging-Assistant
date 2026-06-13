@@ -334,7 +334,7 @@ private slots:
     {
         // 测试目的：验证shouldDisplayRecord在不同模式下的行为
         SerialRecord matched = createRxRecord(QByteArray::fromHex("01"), "Match");
-        SerialRecord unmatched = createRxRecord(QByteArray::fromHex("02"), "NoMatch");
+        SerialRecord unmatched = createRxRecord(QByteArray::fromHex("02"), "Other");
 
         // 无过滤时全部显示
         store->setFilterPattern("");

@@ -67,11 +67,13 @@ void RecordStore::clear()
 
 QString RecordStore::recordSearchText(const SerialRecord& record)
 {
+    const QString compactHex = QString::fromLatin1(record.payload.toHex()).toUpper();
     return QStringList{
         directionText(record.direction),
         record.protocol,
         record.text,
         bytesToHex(record.payload),
+        compactHex,
         record.info,
         record.error
     }.join(QStringLiteral(" "));

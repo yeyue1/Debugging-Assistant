@@ -7,9 +7,6 @@ macro(add_serial_test TEST_NAME TEST_SOURCE)
     target_link_libraries(${TEST_NAME} PRIVATE
         Qt${QT_VERSION_MAJOR}::Test
         Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Widgets
-        Qt${QT_VERSION_MAJOR}::SerialPort
-        Qt${QT_VERSION_MAJOR}::Network
     )
     target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})

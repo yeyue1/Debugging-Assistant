@@ -160,10 +160,7 @@ private slots:
 
         queue->start();
 
-        // 等待第一个项目完成
-        QTest::qWait(100);
-
-        // 第一个项目应该被移到末尾
+        // start() 会同步发送第一个项目，并立即把它移到队列末尾。
         QCOMPARE(queue->itemAt(0).displayText, QString("Second"));
         QCOMPARE(queue->itemAt(1).displayText, QString("First"));
     }
@@ -454,9 +451,7 @@ private slots:
         queue->enqueue(QByteArray::fromHex("01"), "Test", 3, 10);
         queue->start();
 
-        // 等待第一次发送
-        QTest::qWait(50);
-
+        // start() 会同步发送一次，然后再启动后续定时器。
         QCOMPARE(sendSpy.count(), 1);
         QCOMPARE(queue->itemAt(0).remaining, 2);
     }
