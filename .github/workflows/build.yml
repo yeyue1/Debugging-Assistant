@@ -24,12 +24,10 @@ jobs:
         modules: 'qtserialport'
 
     - name: Configure
-      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
+      run: cmake -S . -B ci-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
 
     - name: Build
-      run: cmake --build build --config Release
+      run: cmake --build ci-build --config Release
 
     - name: Run Tests
-      run: |
-        cd build
-        ctest --output-on-failure
+      run: ctest --test-dir ci-build --output-on-failure -V
