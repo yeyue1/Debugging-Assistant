@@ -28,15 +28,33 @@ jobs:
       run: |
         $qtPrefix = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $env:Qt6_DIR))
         $qtBin = Join-Path $qtPrefix 'bin'
-        $gcc = Get-ChildItem -Path $env:RUNNER_WORKSPACE -Filter gcc.exe -Recurse |
-          Where-Object { $_.FullName -match 'mingw.*[\\/]bin[\\/]gcc\.exe$' -and $_.FullName -notmatch '[\\/]6\.6\.0[\\/]' } |
-          Select-Object -First 1
+        $toolchains = Get-ChildItem -Path $env:RUNNER_WORKSPACE -Filter g++.exe -Recurse |
+          Where-Object { $_.FullName -match 'mingw.*[\\/]bin[\\/]g\+\+\.exe$' } |
+          ForEach-Object {
+            $machine = (& $_.FullName -dumpmachine 2>$null).Trim()
+            $version = (& $_.FullName -dumpfullversion 2>$null).Trim()
+            [PSCustomObject]@{
+              Path = $_.FullName
+              Bin = Split-Path -Parent $_.FullName
+              Machine = $machine
+              Version = $version
+            }
+          }
 
-        if (-not $gcc) {
-          throw "Could not find the MinGW toolchain installed by install-qt-action"
+        $toolchains | ForEach-Object {
+          Write-Host "Found MinGW: $($_.Path) machine=$($_.Machine) version=$($_.Version)"
         }
 
-        $mingwBin = Split-Path -Parent $gcc.FullName
+        $toolchain = $toolchains |
+          Where-Object { $_.Machine -eq 'x86_64-w64-mingw32' } |
+          Sort-Object Version -Descending |
+          Select-Object -First 1
+
+        if (-not $toolchain) {
+          throw "Could not find a 64-bit MinGW toolchain installed by install-qt-action"
+        }
+
+        $mingwBin = $toolchain.Bin
         "QT_BIN=$qtBin" | Out-File -FilePath $env:GITHUB_ENV -Append
         "MINGW_BIN=$mingwBin" | Out-File -FilePath $env:GITHUB_ENV -Append
         "QT_MINGW_PATH=$mingwBin;$qtBin" | Out-File -FilePath $env:GITHUB_ENV -Append
