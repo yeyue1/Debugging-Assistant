@@ -3,11 +3,14 @@
 #include <QWidget>
 #include <QSerialPort>
 #include <QByteArray>
+#include <QString>
 #include <QJsonObject>
+#include <QKeyEvent>
 #include <cstdint>
 
 #include "SerialConfig.h"
 #include "SerialRecord.h"
+#include "ParsedFrame.h"
 
 namespace Ui { class SerialPanel; }
 
@@ -47,6 +50,11 @@ public:
 
     QByteArray saveSplitterState() const;
     void restoreSplitterState(const QByteArray& state);
+    void restoreSplitterState();
+    QString splitterSettingsKey() const;
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 signals:
     void connectionStateChanged(bool connected);
@@ -72,6 +80,7 @@ private slots:
     void onClosed();
     void onDataReceived(const QByteArray& data);
     void onFrameReady(const QByteArray& payload, const QString& info);
+    void onParsedFrameReady(const ParsedFrame& frame);
     void onRawDataReady(const QByteArray& data);
     void onFrameError(const QString& message);
     void onSerialError(QSerialPort::SerialPortError code, const QString& message);
@@ -87,6 +96,10 @@ private slots:
     void onExportConfigTemplateClicked();
     void onImportConfigTemplateClicked();
     void onFilterChanged();
+    void onSearchTextChanged();
+    void onFindNext();
+    void onFindPrevious();
+    void onToggleSearchBar();
     void onAddQueueClicked();
     void onInsertQueueClicked();
     void onRemoveQueueClicked();
@@ -108,6 +121,7 @@ private:
     void setupActionMenus();
     void setupSendPreview();
     void setupSendQueueControls();
+    void setupSearchBar();
     int selectedQueueRow() const;
     void refreshSendQueueTable();
     void updatePortCombo(const QStringList& ports);
@@ -133,6 +147,8 @@ private:
     void saveRecordsAsCsv(const QString& fileName, bool filteredOnly) const;
     void saveRecordsAsJson(const QString& fileName, bool filteredOnly) const;
     void applyTemplateObject(const QJsonObject& object, bool includePortName);
+
+    int m_instanceId = 0;
 
     Ui::SerialPanel* ui = nullptr;
     SerialManager* m_serial = nullptr;
@@ -189,6 +205,19 @@ private:
     QCheckBox* m_autoReplyRegexCheck = nullptr;
     QTableWidget* m_frameTable = nullptr;
     QTextEdit* m_jsonPreviewEdit = nullptr;
+
+    // Search bar widgets
+    QWidget* m_searchBarWidget = nullptr;
+    QLineEdit* m_searchEdit = nullptr;
+    QCheckBox* m_searchCaseCheck = nullptr;
+    QCheckBox* m_searchRegexCheck = nullptr;
+    QLabel* m_searchCountLabel = nullptr;
+    int m_searchCurrentIndex = 0;
+    int m_searchTotalCount = 0;
+
+    // Parsed frame data
+    ParsedFrame m_lastParsedFrame;
+    bool m_hasParsedFrame = false;
 
     // Runtime state
     QString m_lastDeviceKey;

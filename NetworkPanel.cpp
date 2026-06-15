@@ -31,6 +31,7 @@
 #include <QToolButton>
 #include <QTimer>
 #include <QSplitter>
+#include <QSettings>
 #include <QtGlobal>
 
 #include "AppConstants.h"
@@ -58,6 +59,8 @@ QString normalizeHex(QString text)
     return text;
 }
 
+int s_networkPanelCount = 0;
+
 }
 
 NetworkPanel::NetworkPanel(QWidget* parent)
@@ -66,17 +69,22 @@ NetworkPanel::NetworkPanel(QWidget* parent)
       m_network(new NetworkManager(this)),
       m_recordStore(new RecordStore(this)),
       m_sendQueue(new SendQueue(this)),
-      m_timerSendTimer(new QTimer(this))
+      m_timerSendTimer(new QTimer(this)),
+      m_instanceId(s_networkPanelCount++)
 {
     ui->setupUi(this);
     setupUiFromForm();
     setupConnections();
     setupSendPreview();
     setupSendQueueControls();
+
+    restoreSplitterState();
 }
 
 NetworkPanel::~NetworkPanel()
 {
+    QSettings settings(QStringLiteral("yeyue"), QStringLiteral("serial_prot"));
+    settings.setValue(splitterSettingsKey(), saveSplitterState());
     if (m_network) {
         disconnect(m_network, nullptr, this, nullptr);
         m_network->close();
@@ -1075,4 +1083,16 @@ void NetworkPanel::restoreSplitterState(const QByteArray& state)
     if (!mainState.isEmpty()) ui->mainSplitter->restoreState(mainState);
     if (!leftState.isEmpty()) ui->leftSplitter->restoreState(leftState);
     if (!rightState.isEmpty()) ui->rightSplitter->restoreState(rightState);
+}
+
+QString NetworkPanel::splitterSettingsKey() const
+{
+    return QStringLiteral("networkPanel/splitterState_%1").arg(m_instanceId);
+}
+
+void NetworkPanel::restoreSplitterState()
+{
+    const QSettings settings(QStringLiteral("yeyue"), QStringLiteral("serial_prot"));
+    const QByteArray state = settings.value(splitterSettingsKey()).toByteArray();
+    restoreSplitterState(state);
 }

@@ -24,6 +24,7 @@ ParserController::ParserType ParserController::switchTo(ParserType type)
     // 断开旧解析器的信号
     if (m_parser) {
         disconnect(m_parser, &ProtocolParserBase::frameReady, this, &ParserController::frameReady);
+        disconnect(m_parser, &ProtocolParserBase::parsedFrameReady, this, &ParserController::parsedFrameReady);
         disconnect(m_parser, &ProtocolParserBase::rawDataReady, this, &ParserController::rawDataReady);
         disconnect(m_parser, &ProtocolParserBase::frameError, this, &ParserController::frameError);
         m_parser->deleteLater();
@@ -53,6 +54,7 @@ void ParserController::createParser(ParserType type)
     // 将当前解析器的信号桥接到 ParserController 的信号
     if (m_parser) {
         connect(m_parser, &ProtocolParserBase::frameReady, this, &ParserController::frameReady);
+        connect(m_parser, &ProtocolParserBase::parsedFrameReady, this, &ParserController::parsedFrameReady);
         connect(m_parser, &ProtocolParserBase::rawDataReady, this, &ParserController::rawDataReady);
         connect(m_parser, &ProtocolParserBase::frameError, this, &ParserController::frameError);
     }

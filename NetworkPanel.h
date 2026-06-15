@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QByteArray>
+#include <QString>
 #include <QStringList>
 #include <cstdint>
 
@@ -38,6 +39,8 @@ public:
 
     QByteArray saveSplitterState() const;
     void restoreSplitterState(const QByteArray& state);
+    void restoreSplitterState();
+    QString splitterSettingsKey() const;
 
 signals:
     void connectionStateChanged(bool connected);
@@ -99,6 +102,8 @@ private:
     void saveRecordsAsText(const QString& fileName, bool filteredOnly) const;
     void saveRecordsAsCsv(const QString& fileName, bool filteredOnly) const;
     void saveRecordsAsJson(const QString& fileName, bool filteredOnly) const;
+
+    int m_instanceId = 0;
 
     Ui::NetworkPanel* ui = nullptr;
     NetworkManager* m_network = nullptr;

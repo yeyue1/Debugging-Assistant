@@ -46,6 +46,7 @@ set(PROJECT_SOURCES
         ProtocolParserBase.cpp
         ProtocolParser.cpp
         ProtocolParser.h
+        ParsedFrame.h
         RawDataParser.cpp
         RawDataParser.h
         TextDataParser.cpp

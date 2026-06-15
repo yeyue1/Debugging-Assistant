@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QByteArray>
 
+#include "ParsedFrame.h"
+
 class ProtocolParserBase;
 
 // 管理协议解析器的创建、切换和信号路由
@@ -38,6 +40,7 @@ public slots:
 signals:
     // 透传当前解析器的信号
     void frameReady(const QByteArray& payload, const QString& info);
+    void parsedFrameReady(const ParsedFrame& frame);
     void rawDataReady(const QByteArray& data);
     void frameError(const QString& message);
 

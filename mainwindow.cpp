@@ -226,8 +226,6 @@ bool MainWindow::loadSettings()
 
             NetworkPanel* panel = createNetworkPanel();
             panel->setNetworkConfig(config);
-            const QByteArray splitterState = settings.value(QStringLiteral("splitterState")).toByteArray();
-            panel->restoreSplitterState(splitterState);
             continue;
         }
 
@@ -236,8 +234,6 @@ bool MainWindow::loadSettings()
 
         SerialPanel* panel = createSerialPortPanel();
         panel->setSerialConfig(config);
-        const QByteArray splitterState = settings.value(QStringLiteral("splitterState")).toByteArray();
-        panel->restoreSplitterState(splitterState);
     }
 
     settings.endArray();
@@ -297,7 +293,6 @@ void MainWindow::saveSettings() const
         if (panel) {
             settings.setValue(QStringLiteral("type"), QStringLiteral("serial"));
             panel->serialConfig().save(settings);
-            settings.setValue(QStringLiteral("splitterState"), panel->saveSplitterState());
             continue;
         }
 
@@ -305,7 +300,6 @@ void MainWindow::saveSettings() const
         if (networkPanel) {
             settings.setValue(QStringLiteral("type"), QStringLiteral("network"));
             networkPanel->networkConfig().save(settings);
-            settings.setValue(QStringLiteral("splitterState"), networkPanel->saveSplitterState());
         }
     }
 

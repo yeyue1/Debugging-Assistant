@@ -12,6 +12,7 @@ void ProtocolParser::reset()
     m_state = State::WaitHeader1;
     m_length = 0;
     m_payload.clear();
+    m_frameRaw.clear();
     m_crcBytes[0] = 0;
     m_crcBytes[1] = 0;
 }
@@ -33,13 +34,18 @@ void ProtocolParser::processByte(quint8 byte)
     switch (m_state) {
     case State::WaitHeader1:
         if (byte == 0x55) {
+            m_frameRaw.clear();
+            m_frameRaw.append(static_cast<char>(byte));
             m_state = State::WaitHeader2;
         }
         break;
     case State::WaitHeader2:
         if (byte == 0xAA) {
+            m_frameRaw.append(static_cast<char>(byte));
             m_state = State::WaitLength;
         } else if (byte == 0x55) {
+            m_frameRaw.clear();
+            m_frameRaw.append(static_cast<char>(byte));
             m_state = State::WaitHeader2;
         } else {
             m_state = State::WaitHeader1;
@@ -48,6 +54,7 @@ void ProtocolParser::processByte(quint8 byte)
     case State::WaitLength:
         m_length = byte;
         m_payload.clear();
+        m_frameRaw.append(static_cast<char>(byte));
         if (m_length == 0) {
             m_state = State::WaitCrc1;
         } else {
@@ -56,16 +63,19 @@ void ProtocolParser::processByte(quint8 byte)
         break;
     case State::WaitPayload:
         m_payload.append(static_cast<char>(byte));
+        m_frameRaw.append(static_cast<char>(byte));
         if (m_payload.size() >= m_length) {
             m_state = State::WaitCrc1;
         }
         break;
     case State::WaitCrc1:
         m_crcBytes[0] = byte;
+        m_frameRaw.append(static_cast<char>(byte));
         m_state = State::WaitCrc2;
         break;
     case State::WaitCrc2:
         m_crcBytes[1] = byte;
+        m_frameRaw.append(static_cast<char>(byte));
         finalizeFrame();
         m_state = State::WaitHeader1;
         break;
@@ -87,6 +97,51 @@ void ProtocolParser::finalizeFrame()
     }
 
     QString info = QStringLiteral("CRC=0x%1").arg(received, 4, 16, QLatin1Char('0')).toUpper();
+
+    // 构建结构化帧数据（先于 frameReady 发出，以便 SerialPanel 可在 record 链路中使用）
+    ParsedFrame parsedFrame;
+    parsedFrame.protocolName = name();
+    parsedFrame.rawBytes = m_frameRaw;
+    parsedFrame.checksumOk = true;
+
+    // 帧头字段
+    ParsedField headerField;
+    headerField.name = QStringLiteral("帧头");
+    headerField.raw = m_frameRaw.left(2);
+    headerField.value = QStringLiteral("0x55AA");
+    headerField.note = QStringLiteral("帧头标识 (0x55AA)");
+    parsedFrame.fields.append(headerField);
+
+    // 长度字段
+    ParsedField lengthField;
+    lengthField.name = QStringLiteral("长度");
+    lengthField.raw = QByteArray(1, static_cast<char>(m_length));
+    lengthField.value = QString::number(m_length);
+    lengthField.note = QStringLiteral("负载长度 (%1 字节)").arg(m_length);
+    parsedFrame.fields.append(lengthField);
+
+    // 负载字段
+    ParsedField payloadField;
+    payloadField.name = QStringLiteral("负载");
+    payloadField.raw = m_payload;
+    if (m_payload.isEmpty()) {
+        payloadField.value = QStringLiteral("(空)");
+    } else {
+        payloadField.value = QString::fromLatin1(m_payload.toHex(' ')).toUpper();
+    }
+    payloadField.note = QStringLiteral("负载数据 (%1 字节)").arg(m_payload.size());
+    parsedFrame.fields.append(payloadField);
+
+    // CRC 字段
+    ParsedField crcField;
+    crcField.name = QStringLiteral("CRC");
+    crcField.raw = QByteArray(1, static_cast<char>(m_crcBytes[0]))
+        + QByteArray(1, static_cast<char>(m_crcBytes[1]));
+    crcField.value = QStringLiteral("0x%1").arg(received, 4, 16, QLatin1Char('0')).toUpper();
+    crcField.note = QStringLiteral("CRC16-MODBUS 校验 (通过)");
+    parsedFrame.fields.append(crcField);
+
+    emit parsedFrameReady(parsedFrame);
     emit frameReady(m_payload, info);
 }
 

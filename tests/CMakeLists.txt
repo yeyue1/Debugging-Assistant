@@ -33,3 +33,25 @@ add_serial_test(TestAutomationRuleEngine TestAutomationRuleEngine.cpp
 add_serial_test(TestSendQueue TestSendQueue.cpp
     ${CMAKE_SOURCE_DIR}/SendQueue.cpp
 )
+
+# DeviceRegistry 测试 - 需要 DeviceRegistry 和 Qt::SerialPort
+add_serial_test(TestDeviceRegistry TestDeviceRegistry.cpp
+    ${CMAKE_SOURCE_DIR}/DeviceRegistry.cpp
+)
+target_link_libraries(TestDeviceRegistry PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
+
+# TemplateManager 测试 - 需要 TemplateManager、RecordStore 和 SerialPort
+add_serial_test(TestTemplateManager TestTemplateManager.cpp
+    ${CMAKE_SOURCE_DIR}/TemplateManager.cpp
+    ${CMAKE_SOURCE_DIR}/RecordStore.cpp
+)
+target_link_libraries(TestTemplateManager PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
+
+# ParserController 测试 - 需要所有解析器和基础类
+add_serial_test(TestParserController TestParserController.cpp
+    ${CMAKE_SOURCE_DIR}/ParserController.cpp
+    ${CMAKE_SOURCE_DIR}/ProtocolParserBase.cpp
+    ${CMAKE_SOURCE_DIR}/RawDataParser.cpp
+    ${CMAKE_SOURCE_DIR}/TextDataParser.cpp
+    ${CMAKE_SOURCE_DIR}/ProtocolParser.cpp
+)

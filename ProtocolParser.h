@@ -33,5 +33,6 @@ private:
     State m_state = State::WaitHeader1;
     quint8 m_length = 0;
     QByteArray m_payload;
+    QByteArray m_frameRaw;
     quint8 m_crcBytes[2] = {0, 0};
 };

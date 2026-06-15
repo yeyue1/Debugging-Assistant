@@ -15,26 +15,41 @@ serial_prot/
 |-- mainwindow.ui               主窗口界面和工具栏
 |-- mainwindow.h/.cpp           主窗口逻辑
 |-- serialpanel.ui              串口面板界面
-|-- SerialPanel.h/.cpp          单个串口面板核心逻辑
+|-- SerialPanel.h/.cpp          单个串口面板核心逻辑（含搜索栏）
 |-- SerialManager.h/.cpp        QSerialPort 封装
 |-- SerialConfig.h              串口配置结构和 QSettings 读写
 |-- SerialRecord.h              收发记录数据结构
-|-- SendQueue.h/.cpp            串口和网口共享的发送队列、单项间隔、循环和速率控制
+|-- SendQueue.h/.cpp            串口和网口共享的发送队列、循环和导入导出
 |-- DeviceRegistry.h/.cpp       串口设备识别、别名、一键复连
 |-- RecordStore.h/.cpp          串口记录存储、过滤、统计辅助
-|-- AutomationRuleEngine.h/.cpp 自动回复规则匹配
+|-- AutomationRuleEngine.h/.cpp 自动回复规则匹配（含防循环保护）
 |-- TemplateManager.h/.cpp      串口配置模板和记录导出辅助
 |-- ParserController.h/.cpp     串口解析器切换和分发
+|-- ParsedFrame.h               结构化帧模型（ParsedField/ParsedFrame）
 |-- networkpanel.ui             网口面板界面
 |-- NetworkPanel.h/.cpp         单个网口面板核心逻辑
 |-- NetworkManager.h/.cpp       TCP/UDP 封装
 |-- NetworkConfig.h             网口配置结构和 QSettings 读写
-|-- ProtocolParserBase.h        协议解析器抽象基类
+|-- ProtocolParserBase.h/.cpp   协议解析器抽象基类
 |-- RawDataParser.h/.cpp        原始数据解析器
 |-- TextDataParser.h/.cpp       文本解析器
-|-- ProtocolParser.h/.cpp       自定义协议解析器
+|-- ProtocolParser.h/.cpp       自定义协议解析器（输出 ParsedFrame）
 |-- ThemeManager.h/.cpp         主题管理
-`-- ARCHITECTURE.md            本文档
+|-- PanelHelper.h               面板辅助工具
+|-- EncodingCodec.h             编解码辅助
+|-- NewLineHelper.h             换行符辅助
+|-- ThemeColors.h               主题颜色常量
+|-- AppConstants.h              应用常量
+|-- ARCHITECTURE.md             本文档
+`-- tests/                      自动化测试（154 个用例）
+    |-- CMakeLists.txt          测试构建配置
+    |-- TestProtocolParser.cpp  协议解析器测试（14 用例）
+    |-- TestRecordStore.cpp     记录存储测试（26 用例）
+    |-- TestAutomationRuleEngine.cpp  自动回复测试（27 用例）
+    |-- TestSendQueue.cpp       发送队列测试（34 用例）
+    |-- TestDeviceRegistry.cpp  设备识别测试（14 用例）
+    |-- TestTemplateManager.cpp 模板管理测试（23 用例）
+    `-- TestParserController.cpp  解析器控制器测试（16 用例）
 ```
 
 ## 顶层模块关系
@@ -554,121 +569,124 @@ TCP/UDP 设备
 
 需要注意：部分状态颜色依赖控件 `objectName`，例如 `statusConnected` 和 `statusDisconnected`。
 
-## 当前架构问题
+## 已完成功能
 
-这些不是阻塞问题，但后续继续扩展时建议优先处理。
+以下架构问题已在迭代中解决：
 
-### SerialPanel 过大
+### QSplitter 布局持久化 ✅
 
-`SerialPanel` 同时承担连接管理、收发、解析展示、过滤、自动回复、设备别名、模板和日志保存。继续增加协议编辑器、队列编辑器或远程 API 时，文件会继续膨胀。
+每个面板通过实例 ID 独立保存/恢复 splitter 状态：
 
-项目已经拆出一部分辅助对象：
+- `SerialPanel`：`serialPanel/splitterState_N`
+- `NetworkPanel`：`networkPanel/splitterState_N`
+- 构造时自动恢复，析构时自动保存
 
-- `DeviceRegistry`：设备识别、别名、一键复连。
-- `RecordStore`：`SerialRecord` 存储、过滤、导出。
-- `AutomationRuleEngine`：接收匹配和自动回复。
-- `TemplateManager`：配置模板导入导出。
-- `ParserController`：解析器切换和多协议分发。
-- `SendQueue`：发送队列、重复次数、单项间隔和循环发送。
+### 发送队列增强 ✅
 
-后续建议继续拆分布局状态、日志导出策略、队列编辑器持久化和解析结果模型。
+`SendQueue` 新增功能：
 
-### 面板职责可以继续下沉
+- **循环发送**：`setLoopEnabled(true)` 启用循环模式，队列完成后从头重发
+- **循环次数**：`setLoopRepeatCount(n)` 设置循环次数（0 = 无限循环）
+- **JSON 导出/导入**：`exportToJson()` / `importFromJson()` 保存和加载队列
+- **清空并停止**：`clearAndStop()` 一键停止并清空队列
+- **项目编辑**：`updateItem()` 修改已有队列项
 
-串口和网口界面主体、分割器、发送预估标签和发送队列控件均由 `.ui` 文件定义；面板类仍在运行期创建低频操作菜单。`SerialPanel` 和 `NetworkPanel` 仍然同时承担状态管理、编码转换、展示、导出和菜单增强逻辑。后续功能继续增加时，应优先把记录存储、导出、自动化规则、队列配置持久化和布局状态拆成独立对象。
+### 接收区搜索 ✅
 
-### 布局状态尚未持久化
+`SerialPanel` 新增搜索栏：
 
-当前各区通过 `QSplitter` 可以手动调整大小，但比例没有保存。重启应用后会回到默认比例。
+- **快捷键**：Ctrl+F 切换搜索栏显示
+- **搜索选项**：大小写敏感、正则表达式
+- **匹配计数**：显示 “N / M 个匹配”
+- **上一个/下一个**：导航按钮，支持首尾循环
 
-建议：
+### 结构化 ParsedFrame ✅
 
-- 为每个面板保存顶层、左右、左侧、右侧 splitter 的 `saveState()`。
-- 按面板类型和标签页顺序恢复 `restoreState()`。
-- 若后续支持面板重命名，应将布局状态绑定到稳定面板 id。
-
-### 解析结果模型偏薄
-
-当前解析器只输出 `payload + info`，解析结果表格只能显示协议、长度、负载。要实现真正的字段表格、校验高亮和 JSON 结构化预览，需要引入更丰富的帧模型。
-
-建议新增：
+新增 `ParsedFrame.h`，定义结构化帧数据模型：
 
 ```cpp
 struct ParsedField {
-    QString name;
-    QString value;
-    QByteArray raw;
-    QString note;
+    QString name;     // 字段名
+    QString value;    // 解码值
+    QByteArray raw;   // 原始字节
+    QString note;     // 备注
 };
 
 struct ParsedFrame {
-    QString protocol;
-    QByteArray raw;
-    QList<ParsedField> fields;
-    bool checksumOk;
-    QString error;
+    QString protocolName;           // 协议名称
+    QByteArray rawBytes;            // 完整帧原始字节
+    QList<ParsedField> fields;      // 结构化字段列表
+    bool checksumOk;                // 校验是否通过
+    QString error;                  // 错误信息
 };
 ```
 
-### 自动回复缺少防循环保护
+- `ProtocolParser` 解析时构建 `ParsedFrame`，包含 header/length/payload/CRC 四个结构化字段
+- `SerialPanel` 帧表格显示结构化字段（字段名/原始值/解码值/备注）
+- JSON 预览包含 `fields` 数组
+- 保持向后兼容：`frameReady(payload, info)` 信号照常触发
 
-当前自动回复基于接收记录触发。若外部设备回显自动回复内容，可能形成持续触发。
+### 自动回复防循环保护 ✅
 
-建议：
+`AutomationRuleEngine` 新增保护机制：
 
-- 增加冷却时间。
-- 增加单条规则最大触发次数。
-- 增加“只触发一次”选项。
+- **冷却时间**：每条规则触发后 500ms 内不可再次触发
+- **最大触发次数**：单条规则默认最多触发 10 次后自动禁用
+- **一次性模式**：规则触发一次后自动禁用
+- **全局速率限制**：所有规则合计每分钟最多 20 次
+- **重置机制**：串口重新打开时重置所有计数器
+- **信号通知**：`ruleDisabled`、`cooldownActive`、`globalRateLimitReached`
+
+### 单元测试 ✅
+
+项目包含 154 个自动化测试用例，覆盖核心模块：
+
+| 测试文件 | 用例数 | 覆盖内容 |
+|---------|-------|---------|
+| `TestProtocolParser` | 14 | 帧解析、CRC 校验、边界条件 |
+| `TestRecordStore` | 26 | 记录存储、过滤、统计 |
+| `TestAutomationRuleEngine` | 27 | 自动回复、防循环保护 |
+| `TestSendQueue` | 34 | 队列操作、循环、导入导出 |
+| `TestDeviceRegistry` | 14 | 设备识别、别名、端口查找 |
+| `TestTemplateManager` | 23 | JSON 序列化、CSV 转义、模板验证 |
+| `TestParserController` | 16 | 解析器切换、数据分发、信号转发 |
+
+## 当前架构问题
+
+以下问题仍需后续处理：
+
+### SerialPanel 过大
+
+`SerialPanel` 同时承担连接管理、收发、解析展示、过滤、自动回复、设备别名、模板和日志保存。后续建议继续拆分。
 
 ### 日志导出和界面显示耦合
 
-文本导出目前保存的是 `rxEdit` 当前显示内容，若开启隐藏未匹配记录，导出的文本会受过滤影响。CSV 和 JSON 使用完整 `SerialRecord`，行为更稳定。
-
-建议：
-
-- 文本导出也基于 `SerialRecord` 生成。
-- 提供“导出全部记录”和“导出当前过滤结果”两个选项。
-
-### 缺少测试
-
-当前项目没有自动化测试。后续至少应给以下逻辑补测试：
-
-- `ProtocolParser` 的有效帧和 CRC 错误帧。
-- 设备 key 生成规则。
-- 配置模板导入导出。
-- 过滤规则和正则规则。
-- 自动回复触发规则。
-- TCP 客户端连接失败和断开重连。
-- TCP 服务端多客户端收发。
-- UDP 绑定端口和数据报发送。
+文本导出目前保存的是 `rxEdit` 当前显示内容，若开启隐藏未匹配记录，导出的文本会受过滤影响。建议文本导出也基于 `SerialRecord` 生成。
 
 ## 后续演进顺序
 
 建议按以下顺序继续扩展：
 
-1. 保存和恢复 `QSplitter` 布局比例。
-2. 增强发送队列：支持队列导入导出和分包发送。
-3. 增加接收区搜索、高亮、暂停显示和“清空显示但保留记录”。
+1. ~~保存和恢复 `QSplitter` 布局比例。~~ ✅ 已完成
+2. ~~增强发送队列：支持队列导入导出和循环发送。~~ ✅ 已完成
+3. ~~增加接收区搜索和高亮。~~ ✅ 已完成
 4. 把 `SerialRecord` 相关逻辑拆成独立记录仓库，并让网口也使用统一记录模型。
-5. 引入结构化 `ParsedFrame`。
-6. 做协议字段表格和 JSON 预览的真实字段展示。
-7. 做日志回放，把日志重新喂给解析链路。
-8. 做多协议自动识别分发。
-9. 增加网口客户端备注名和 UDP 主机名解析。
-10. 最后再考虑插件机制、HTTP/WebSocket API 和 CLI。
+5. ~~引入结构化 `ParsedFrame`。~~ ✅ 已完成
+6. 做日志回放，把日志重新喂给解析链路。
+7. 做多协议自动识别分发。
+8. 增加网口客户端备注名和 UDP 主机名解析。
+9. 最后再考虑插件机制、HTTP/WebSocket API 和 CLI。
 
 ## 可继续增加的功能
 
 短期适合增加、风险较低的功能：
 
-- 布局比例保存/恢复。
-- 接收区搜索、高亮和跳转。
 - 暂停接收显示：后台继续统计和记录，界面暂停追加。
 - 发送模板/常用命令：按编码和十六进制模式保存常用发送内容。
-- 发送队列导入导出。
 - 网口 TCP 客户端断线自动重连。
 - TCP 服务端客户端备注名和定向发送增强。
 - 导出当前过滤结果和导出全部记录两个入口。
+- 文本导出基于 `SerialRecord` 生成。
 
 中长期功能：
 
@@ -681,7 +699,7 @@ struct ParsedFrame {
 ## 构建
 
 ```bash
-cmake -B build -DCMAKE_PREFIX_PATH=/path/to/qt6
+cmake -B build -G “MinGW Makefiles” -DCMAKE_PREFIX_PATH=/path/to/qt6
 cmake --build build
 ```
 
@@ -690,4 +708,18 @@ CMake 关键配置：
 - `CMAKE_AUTOUIC ON`：自动处理 `.ui` 文件。
 - `CMAKE_AUTOMOC ON`：自动处理 `Q_OBJECT`。
 - `CMAKE_AUTORCC ON`：自动处理资源文件。
-- 链接模块：`Qt::Widgets`、`Qt::SerialPort`、`Qt::Network`。
+- 链接模块：`Qt::Widgets`、`Qt::SerialPort`、`Qt::Network`、`Qt::Test`。
+
+### 运行测试
+
+```bash
+cd build/tests
+# 需要将 Qt DLL 和 MinGW 运行时 DLL 放到 PATH 中
+./TestProtocolParser.exe
+./TestRecordStore.exe
+./TestAutomationRuleEngine.exe
+./TestSendQueue.exe
+./TestDeviceRegistry.exe
+./TestTemplateManager.exe
+./TestParserController.exe
+```

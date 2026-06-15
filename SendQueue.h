@@ -28,6 +28,7 @@ public:
 
     bool isRunning() const { return m_running; }
     bool loopEnabled() const { return m_loopEnabled; }
+    int loopRepeatCount() const { return m_loopRepeatCount; }
     int intervalMs() const { return m_defaultIntervalMs; }
     int pendingItemCount() const;
     int pendingSendCount() const;
@@ -35,6 +36,7 @@ public:
 
     void setIntervalMs(int intervalMs);
     void setLoopEnabled(bool enabled);
+    void setLoopRepeatCount(int count);
     void enqueue(const QByteArray& payload,
                  const QString& displayText,
                  int repeatCount,
@@ -53,6 +55,10 @@ public:
     void updateItem(int index, const QueueItem& item);
     void removeAt(int index);
     void clear();
+    void clearAndStop();
+
+    bool exportToJson(const QString& filePath) const;
+    bool importFromJson(const QString& filePath);
 
 public slots:
     void start();
@@ -74,8 +80,11 @@ private:
     void emitQueueChanged();
 
     QList<QueueItem> m_items;
+    QList<QueueItem> m_backupItems;
     QTimer* m_timer = nullptr;
     int m_defaultIntervalMs = 1000;
     bool m_running = false;
     bool m_loopEnabled = false;
+    int m_loopRepeatCount = 0;
+    int m_loopRemaining = 0;
 };
