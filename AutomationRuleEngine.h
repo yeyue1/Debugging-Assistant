@@ -14,6 +14,8 @@ struct AutoReplyRule {
     QString pattern;        // 匹配模式
     QString replyText;      // 回复内容
     bool useRegex = false;  // 是否正则匹配
+    bool isHexReply = false; // 回复内容是否为 HEX 格式
+    QString encoding = "UTF-8"; // 回复编码：UTF-8 / GBK
     int cooldownMs = 500;   // 触发冷却（毫秒）
     int maxTriggerCount = 10; // 最大触发次数（0=不限制）
     bool onceOnly = false;  // 仅触发一次
@@ -59,8 +61,15 @@ public:
     static void setGlobalMaxPerMinute(int maxCount);
     static int globalMaxPerMinute() { return s_globalMaxPerMinute; }
 
-    // 检查是否有规则匹配，返回匹配的回复文本（空=不触发）
-    QString checkAutoReply(const SerialRecord& record);
+    // 自动回复匹配结果
+    struct MatchResult {
+        QString replyText;      // 回复内容
+        bool isHex = false;     // 是否 HEX 格式
+        QString encoding = "UTF-8"; // 编码
+    };
+
+    // 检查是否有规则匹配，返回匹配结果（replyText 为空=不触发）
+    MatchResult checkAutoReply(const SerialRecord& record);
 
 signals:
     void ruleDisabled(int ruleIndex);

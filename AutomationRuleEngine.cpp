@@ -66,7 +66,7 @@ void AutomationRuleEngine::pruneGlobalTriggerTimes(int64_t now)
 
 // ── 核心匹配逻辑 ──────────────────────────────────────────────────────────
 
-QString AutomationRuleEngine::checkAutoReply(const SerialRecord& record)
+AutomationRuleEngine::MatchResult AutomationRuleEngine::checkAutoReply(const SerialRecord& record)
 {
     if (!m_enabled || record.direction != SerialRecordDirection::Rx) {
         return {};
@@ -127,7 +127,7 @@ QString AutomationRuleEngine::checkAutoReply(const SerialRecord& record)
             ++rule.triggerCount;
             rule.lastTriggerTime = now;
             s_recentTriggerTimes.append(now);
-            return rule.replyText;
+            return {rule.replyText, rule.isHexReply, rule.encoding};
         }
     }
 

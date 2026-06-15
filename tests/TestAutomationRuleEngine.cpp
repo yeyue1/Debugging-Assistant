@@ -69,7 +69,7 @@ private slots:
         engine->addRule(makeRule("Hello", "Hi there!"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Hello World");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Hi there!"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Hi there!"));
     }
 
     void testNoMatch()
@@ -78,7 +78,7 @@ private slots:
         engine->addRule(makeRule("Hello", "Hi"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Goodbye");
-        QVERIFY(engine->checkAutoReply(record).isEmpty());
+        QVERIFY(engine->checkAutoReply(record).replyText.isEmpty());
     }
 
     void testRegexMatch()
@@ -87,7 +87,7 @@ private slots:
         engine->addRule(makeRule("\\d+\\.\\d+", "Got number", true));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Value: 3.14");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Got number"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Got number"));
     }
 
     void testDisabledEngine()
@@ -96,7 +96,7 @@ private slots:
         engine->addRule(makeRule("Hello", "Hi"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Hello");
-        QVERIFY(engine->checkAutoReply(record).isEmpty());
+        QVERIFY(engine->checkAutoReply(record).replyText.isEmpty());
     }
 
     void testOnlyTriggersOnRx()
@@ -105,10 +105,10 @@ private slots:
         engine->addRule(makeRule("Data", "OK"));
 
         SerialRecord txRecord = createTxRecord(QByteArray::fromHex("01"), "Data Sent");
-        QVERIFY(engine->checkAutoReply(txRecord).isEmpty());
+        QVERIFY(engine->checkAutoReply(txRecord).replyText.isEmpty());
 
         SerialRecord rxRecord = createRxRecord(QByteArray::fromHex("01"), "Data Received");
-        QCOMPARE(engine->checkAutoReply(rxRecord), QStringLiteral("OK"));
+        QCOMPARE(engine->checkAutoReply(rxRecord).replyText, QStringLiteral("OK"));
     }
 
     void testEmptyPattern()
@@ -117,7 +117,7 @@ private slots:
         engine->addRule(makeRule("", "Reply"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Any");
-        QVERIFY(engine->checkAutoReply(record).isEmpty());
+        QVERIFY(engine->checkAutoReply(record).replyText.isEmpty());
     }
 
     void testCaseInsensitive()
@@ -126,7 +126,7 @@ private slots:
         engine->addRule(makeRule("hello", "Hi"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "HELLO World");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Hi"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Hi"));
     }
 
     void testInvalidRegex()
@@ -135,7 +135,7 @@ private slots:
         engine->addRule(makeRule("[invalid", "Reply", true));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Text");
-        QVERIFY(engine->checkAutoReply(record).isEmpty());
+        QVERIFY(engine->checkAutoReply(record).replyText.isEmpty());
     }
 
     // ── 多规则 ──────────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ private slots:
         engine->addRule(makeRule("Hello", "Reply B"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Hello");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Reply A"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Reply A"));
     }
 
     void testMultipleRulesSecondMatches()
@@ -157,7 +157,7 @@ private slots:
         engine->addRule(makeRule("Bar", "Reply B"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Bar");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Reply B"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Reply B"));
     }
 
     void testDisabledRuleSkipped()
@@ -169,7 +169,7 @@ private slots:
         engine->addRule(makeRule("Hello", "Enabled Reply"));
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Hello");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Enabled Reply"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Enabled Reply"));
     }
 
     void testAddRemoveRules()
@@ -183,7 +183,7 @@ private slots:
         QCOMPARE(engine->rules().size(), 1);
 
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "B");
-        QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Reply B"));
+        QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Reply B"));
     }
 
     // ── 最大触发次数 ────────────────────────────────────────────────────────
@@ -200,12 +200,12 @@ private slots:
         for (int i = 0; i < 3; ++i) {
             QThread::msleep(10);
             SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Ping");
-            QCOMPARE(engine->checkAutoReply(record), QStringLiteral("Pong"));
+            QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Pong"));
         }
 
         // 第 4 次不应触发
         SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Ping");
-        QVERIFY(engine->checkAutoReply(record).isEmpty());
+        QVERIFY(engine->checkAutoReply(record).replyText.isEmpty());
     }
 
     void testOnceOnly()
@@ -217,10 +217,10 @@ private slots:
         engine->addRule(rule);
 
         SerialRecord r1 = createRxRecord(QByteArray::fromHex("01"), "Once");
-        QCOMPARE(engine->checkAutoReply(r1), QStringLiteral("Done"));
+        QCOMPARE(engine->checkAutoReply(r1).replyText, QStringLiteral("Done"));
 
         SerialRecord r2 = createRxRecord(QByteArray::fromHex("01"), "Once");
-        QVERIFY(engine->checkAutoReply(r2).isEmpty());
+        QVERIFY(engine->checkAutoReply(r2).replyText.isEmpty());
     }
 
     // ── 冷却时间 ────────────────────────────────────────────────────────────
@@ -231,11 +231,11 @@ private slots:
         engine->addRule(makeRule("Trigger", "Fired", false, 500));
 
         SerialRecord r1 = createRxRecord(QByteArray::fromHex("01"), "Trigger");
-        QCOMPARE(engine->checkAutoReply(r1), QStringLiteral("Fired"));
+        QCOMPARE(engine->checkAutoReply(r1).replyText, QStringLiteral("Fired"));
 
         // 立即再次触发 — 应被冷却阻止
         SerialRecord r2 = createRxRecord(QByteArray::fromHex("01"), "Trigger");
-        QVERIFY(engine->checkAutoReply(r2).isEmpty());
+        QVERIFY(engine->checkAutoReply(r2).replyText.isEmpty());
     }
 
     // ── 重置 ────────────────────────────────────────────────────────────────
@@ -249,16 +249,16 @@ private slots:
         engine->addRule(rule);
 
         SerialRecord r1 = createRxRecord(QByteArray::fromHex("01"), "Test");
-        QCOMPARE(engine->checkAutoReply(r1), QStringLiteral("Reply"));
+        QCOMPARE(engine->checkAutoReply(r1).replyText, QStringLiteral("Reply"));
 
         // 已达上限
         SerialRecord r2 = createRxRecord(QByteArray::fromHex("01"), "Test");
-        QVERIFY(engine->checkAutoReply(r2).isEmpty());
+        QVERIFY(engine->checkAutoReply(r2).replyText.isEmpty());
 
         // 重置后可以再次触发
         engine->resetTriggerState();
         SerialRecord r3 = createRxRecord(QByteArray::fromHex("01"), "Test");
-        QCOMPARE(engine->checkAutoReply(r3), QStringLiteral("Reply"));
+        QCOMPARE(engine->checkAutoReply(r3).replyText, QStringLiteral("Reply"));
     }
 
     void testResetAllRules()
@@ -269,18 +269,18 @@ private slots:
 
         // 触发 2 次达到全局限制
         SerialRecord r1 = createRxRecord(QByteArray::fromHex("01"), "A");
-        QCOMPARE(engine->checkAutoReply(r1), QStringLiteral("Reply A"));
+        QCOMPARE(engine->checkAutoReply(r1).replyText, QStringLiteral("Reply A"));
         SerialRecord r2 = createRxRecord(QByteArray::fromHex("02"), "A");
-        QCOMPARE(engine->checkAutoReply(r2), QStringLiteral("Reply A"));
+        QCOMPARE(engine->checkAutoReply(r2).replyText, QStringLiteral("Reply A"));
 
         // 全局限制
         SerialRecord r3 = createRxRecord(QByteArray::fromHex("03"), "A");
-        QVERIFY(engine->checkAutoReply(r3).isEmpty());
+        QVERIFY(engine->checkAutoReply(r3).replyText.isEmpty());
 
         // 重置全局
         AutomationRuleEngine::resetAllRules();
         SerialRecord r4 = createRxRecord(QByteArray::fromHex("04"), "A");
-        QCOMPARE(engine->checkAutoReply(r4), QStringLiteral("Reply A"));
+        QCOMPARE(engine->checkAutoReply(r4).replyText, QStringLiteral("Reply A"));
     }
 
     // ── 信号 ────────────────────────────────────────────────────────────────

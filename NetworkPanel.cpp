@@ -85,6 +85,7 @@ NetworkPanel::NetworkPanel(QWidget* parent)
 
     // 自动回复引擎
     m_autoReplyEngine = new AutomationRuleEngine(this);
+    m_autoReplyEngine->setEnabled(true);
 
     restoreSplitterState();
 }
@@ -1112,13 +1113,21 @@ void NetworkPanel::handleAutoReply(const SerialRecord& record)
 {
     if (!m_autoReplyEngine) return;
 
-    const QString reply = m_autoReplyEngine->checkAutoReply(record);
-    if (reply.isEmpty()) return;
+    const auto result = m_autoReplyEngine->checkAutoReply(record);
+    if (result.replyText.isEmpty()) return;
 
-    // 编码并发送
-    bool ok = false;
-    QByteArray data = encodeSendText(reply, &ok);
-    if (!ok || data.isEmpty()) return;
+    QByteArray data;
+    if (result.isHex) {
+        data = QByteArray::fromHex(result.replyText.toLatin1());
+    } else {
+        if (result.encoding == "GBK") {
+            data = result.replyText.toLocal8Bit();
+        } else {
+            data = result.replyText.toUtf8();
+        }
+    }
+
+    if (data.isEmpty()) return;
 
     // 回复到最近来源的 peer
     const QString peer = record.info;
@@ -1133,9 +1142,9 @@ void NetworkPanel::handleAutoReply(const SerialRecord& record)
     txRecord.timestamp = QDateTime::currentDateTime();
     txRecord.direction = SerialRecordDirection::Tx;
     txRecord.payload = data;
-    txRecord.text = reply;
+    txRecord.text = result.replyText;
     txRecord.protocol = QStringLiteral("自动回复");
     m_recordStore->addRecord(txRecord);
 
-    appendLine(reply, ThemeColors::Current::txDisplay());
+    appendLine(result.replyText, ThemeColors::Current::txDisplay());
 }

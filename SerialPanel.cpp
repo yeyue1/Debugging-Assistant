@@ -73,7 +73,7 @@ SerialPanel::SerialPanel(QWidget* parent)
       m_parserController(new ParserController(this)),
       m_deviceRegistry(new DeviceRegistry(this)),
       m_recordStore(new RecordStore(this)),
-      m_autoReplyEngine(new AutomationRuleEngine()),
+      m_autoReplyEngine(new AutomationRuleEngine(this)),
       m_templateManager(new TemplateManager(this)),
       m_sendQueue(new SendQueue(this)),
       m_portScanTimer(new QTimer(this)),
@@ -81,6 +81,9 @@ SerialPanel::SerialPanel(QWidget* parent)
       m_instanceId(s_serialPanelCount++)
 {
     ui->setupUi(this);
+
+    // 默认启用自动回复引擎
+    m_autoReplyEngine->setEnabled(true);
 
     setupUiFromForm();
     setupConnections();
@@ -843,13 +846,29 @@ void SerialPanel::handleAutoReply(const SerialRecord& record)
 {
     if (!m_autoReplyEngine) return;
 
-    const QString reply = m_autoReplyEngine->checkAutoReply(record);
-    if (reply.isEmpty()) return;
+    const auto result = m_autoReplyEngine->checkAutoReply(record);
+    if (result.replyText.isEmpty()) return;
 
-    QString text = reply;
-    NewLineHelper::appendNewLine(text, m_newLineMode);
+    QByteArray data;
+    QString displayText;
 
-    sendPayload(encodeText(text), reply, false);
+    if (result.isHex) {
+        // HEX 格式：直接解析十六进制字符串为字节
+        data = QByteArray::fromHex(result.replyText.toLatin1());
+        displayText = result.replyText;
+    } else {
+        // 文本格式：按指定编码转换
+        QString text = result.replyText;
+        NewLineHelper::appendNewLine(text, m_newLineMode);
+        if (result.encoding == "GBK") {
+            data = text.toLocal8Bit(); // Windows 上 local8Bit 通常是 GBK
+        } else {
+            data = text.toUtf8();
+        }
+        displayText = result.replyText;
+    }
+
+    sendPayload(data, displayText, false);
 }
 
 // ── 日志导出 ──────────────────────────────────────────────────────────────
