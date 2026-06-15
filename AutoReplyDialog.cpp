@@ -25,16 +25,16 @@ AutoReplyDialog::AutoReplyDialog(AutomationRuleEngine* engine, QWidget* parent)
 
     // 说明文字
     auto* infoLabel = new QLabel(tr("配置多条自动回复规则。匹配到接收数据时，将自动发送对应的回复内容。\n"
-                                     "支持 HEX 格式（如 AABBCC）和文本格式，编码可选 UTF-8 或 GBK。"));
+                                     "编码格式：UTF-8 / GBK / ASCII（文本模式）或 HEX（原始字节模式）。"));
     infoLabel->setWordWrap(true);
     mainLayout->addWidget(infoLabel);
 
     // 规则表格
     m_ruleTable = new QTableWidget(this);
-    m_ruleTable->setColumnCount(8);
+    m_ruleTable->setColumnCount(7);
     m_ruleTable->setHorizontalHeaderLabels({
         tr("启用"), tr("匹配模式"), tr("回复内容"),
-        tr("HEX"), tr("编码"), tr("正则"),
+        tr("编码"), tr("正则"),
         tr("冷却(ms)"), tr("最大次数")
     });
     m_ruleTable->horizontalHeader()->setStretchLastSection(true);
@@ -45,10 +45,9 @@ AutoReplyDialog::AutoReplyDialog(AutomationRuleEngine* engine, QWidget* parent)
     m_ruleTable->setColumnWidth(0, 40);   // 启用
     m_ruleTable->setColumnWidth(1, 150);  // 匹配模式
     m_ruleTable->setColumnWidth(2, 180);  // 回复内容
-    m_ruleTable->setColumnWidth(3, 50);   // HEX
-    m_ruleTable->setColumnWidth(4, 80);   // 编码
-    m_ruleTable->setColumnWidth(5, 50);   // 正则
-    m_ruleTable->setColumnWidth(6, 90);   // 冷却
+    m_ruleTable->setColumnWidth(3, 90);   // 编码
+    m_ruleTable->setColumnWidth(4, 50);   // 正则
+    m_ruleTable->setColumnWidth(5, 90);   // 冷却
     mainLayout->addWidget(m_ruleTable);
 
     // 按钮栏
@@ -143,34 +142,27 @@ void AutoReplyDialog::refreshTable()
         // 回复内容（可编辑）
         m_ruleTable->setItem(i, 2, new QTableWidgetItem(rule.replyText));
 
-        // HEX
-        auto* hexCheck = new QCheckBox();
-        hexCheck->setChecked(rule.isHexReply);
-        m_ruleTable->setCellWidget(i, 3, hexCheck);
-
-        // 编码（HEX 模式下禁用）
+        // 编码（含 HEX 选项）
         auto* encodingCombo = new QComboBox();
-        encodingCombo->addItems({"UTF-8", "GBK", "ASCII"});
-        encodingCombo->setCurrentText(rule.encoding);
-        encodingCombo->setEnabled(!rule.isHexReply);
-        m_ruleTable->setCellWidget(i, 4, encodingCombo);
-
-        // HEX 勾选时禁用编码列
-        connect(hexCheck, &QCheckBox::toggled, this, [encodingCombo](bool checked) {
-            encodingCombo->setEnabled(!checked);
-        });
+        encodingCombo->addItems({"UTF-8", "GBK", "ASCII", "HEX"});
+        if (rule.isHexReply) {
+            encodingCombo->setCurrentText("HEX");
+        } else {
+            encodingCombo->setCurrentText(rule.encoding);
+        }
+        m_ruleTable->setCellWidget(i, 3, encodingCombo);
 
         // 正则
         auto* regexCheck = new QCheckBox();
         regexCheck->setChecked(rule.useRegex);
-        m_ruleTable->setCellWidget(i, 5, regexCheck);
+        m_ruleTable->setCellWidget(i, 4, regexCheck);
 
         // 冷却
         auto* cooldownSpin = new QSpinBox();
         cooldownSpin->setRange(0, 60000);
         cooldownSpin->setValue(rule.cooldownMs);
         cooldownSpin->setSuffix(tr(" ms"));
-        m_ruleTable->setCellWidget(i, 6, cooldownSpin);
+        m_ruleTable->setCellWidget(i, 5, cooldownSpin);
 
         // 最大次数
         auto* maxSpin = new QSpinBox();
@@ -228,17 +220,24 @@ void AutoReplyDialog::onAccepted()
     // 从表格读取所有规则的最终状态
     for (int i = 0; i < m_rules.size(); ++i) {
         auto* enableCheck = qobject_cast<QCheckBox*>(m_ruleTable->cellWidget(i, 0));
-        auto* hexCheck = qobject_cast<QCheckBox*>(m_ruleTable->cellWidget(i, 3));
-        auto* encodingCombo = qobject_cast<QComboBox*>(m_ruleTable->cellWidget(i, 4));
-        auto* regexCheck = qobject_cast<QCheckBox*>(m_ruleTable->cellWidget(i, 5));
-        auto* cooldownSpin = qobject_cast<QSpinBox*>(m_ruleTable->cellWidget(i, 6));
-        auto* maxSpin = qobject_cast<QSpinBox*>(m_ruleTable->cellWidget(i, 7));
+        auto* encodingCombo = qobject_cast<QComboBox*>(m_ruleTable->cellWidget(i, 3));
+        auto* regexCheck = qobject_cast<QCheckBox*>(m_ruleTable->cellWidget(i, 4));
+        auto* cooldownSpin = qobject_cast<QSpinBox*>(m_ruleTable->cellWidget(i, 5));
+        auto* maxSpin = qobject_cast<QSpinBox*>(m_ruleTable->cellWidget(i, 6));
 
         if (enableCheck) m_rules[i].enabled = enableCheck->isChecked();
         if (m_ruleTable->item(i, 1)) m_rules[i].pattern = m_ruleTable->item(i, 1)->text();
         if (m_ruleTable->item(i, 2)) m_rules[i].replyText = m_ruleTable->item(i, 2)->text();
-        if (hexCheck) m_rules[i].isHexReply = hexCheck->isChecked();
-        if (encodingCombo) m_rules[i].encoding = encodingCombo->currentText();
+        if (encodingCombo) {
+            QString enc = encodingCombo->currentText();
+            if (enc == "HEX") {
+                m_rules[i].isHexReply = true;
+                m_rules[i].encoding = "UTF-8"; // HEX 模式下编码无意义
+            } else {
+                m_rules[i].isHexReply = false;
+                m_rules[i].encoding = enc;
+            }
+        }
         if (regexCheck) m_rules[i].useRegex = regexCheck->isChecked();
         if (cooldownSpin) m_rules[i].cooldownMs = cooldownSpin->value();
         if (maxSpin) m_rules[i].maxTriggerCount = maxSpin->value();
