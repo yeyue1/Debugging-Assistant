@@ -228,7 +228,7 @@ void SerialPanel::setupUiFromForm()
 
     // Status indicator initial state
     ui->statusIndicator->setStyleSheet(QStringLiteral("background-color: %1; border-radius: 8px;")
-                                           .arg(ThemeColors::Dark::statusDisconnected()));
+                                           .arg(ThemeColors::Current::statusDisconnected()));
     bindFeatureUi();
     setConnectionControls(false);
 }
@@ -707,7 +707,7 @@ void SerialPanel::onSerialError(QSerialPort::SerialPortError code, const QString
     setConnectionControls(m_serial->isOpen());
     ui->statusIndicator->setStyleSheet(
         QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
-            .arg(ThemeColors::Dark::statusDisconnected(), ThemeColors::Dark::statusBorder()));
+            .arg(ThemeColors::Current::statusDisconnected(), ThemeColors::Current::statusBorder()));
     ui->statusLabel->setText(tr("错误: %1").arg(message));
     ui->statusLabel->setObjectName("statusDisconnected");
     ui->statusLabel->style()->unpolish(ui->statusLabel);
@@ -817,15 +817,15 @@ void SerialPanel::appendRecordToReceive(const SerialRecord& record, bool matched
     }
 
     // 颜色
-    QString color = ThemeColors::Dark::rxDefault();
+    QString color = ThemeColors::Current::rxDefault();
     if (record.direction == SerialRecordDirection::Tx) {
-        color = ThemeColors::Dark::txDisplay();
+        color = ThemeColors::Current::txDisplay();
     } else if (!record.error.isEmpty()) {
-        color = ThemeColors::Dark::errorDisplay();
+        color = ThemeColors::Current::errorDisplay();
     } else if (matchedFilter && m_filterEdit && !m_filterEdit->text().trimmed().isEmpty()) {
-        color = ThemeColors::Dark::filterMatch();
+        color = ThemeColors::Current::filterMatch();
     } else if (record.direction == SerialRecordDirection::System) {
-        color = ThemeColors::Dark::systemDisplay();
+        color = ThemeColors::Current::systemDisplay();
     }
 
     ui->rxEdit->append(QStringLiteral("<span style=\"color:%1;\">%2</span>")
@@ -1449,13 +1449,13 @@ void SerialPanel::updateStatusIndicator(bool connected)
     if (connected) {
         ui->statusIndicator->setStyleSheet(
             QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
-                .arg(ThemeColors::Dark::statusConnected(), ThemeColors::Dark::statusBorder()));
+                .arg(ThemeColors::Current::statusConnected(), ThemeColors::Current::statusBorder()));
         ui->statusLabel->setText(tr("已连接"));
         ui->statusLabel->setObjectName("statusConnected");
     } else {
         ui->statusIndicator->setStyleSheet(
             QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
-                .arg(ThemeColors::Dark::statusDisconnected(), ThemeColors::Dark::statusBorder()));
+                .arg(ThemeColors::Current::statusDisconnected(), ThemeColors::Current::statusBorder()));
         ui->statusLabel->setText(tr("未连接"));
         ui->statusLabel->setObjectName("statusDisconnected");
     }

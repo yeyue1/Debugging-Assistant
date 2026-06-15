@@ -764,12 +764,12 @@ void NetworkPanel::updateStatusIndicator(bool connected)
     if (connected) {
         ui->statusIndicator->setStyleSheet(
             QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
-                .arg(ThemeColors::Dark::statusConnected(), ThemeColors::Dark::statusBorder()));
+                .arg(ThemeColors::Current::statusConnected(), ThemeColors::Current::statusBorder()));
         ui->statusLabel->setText(tr("已打开"));
     } else {
         ui->statusIndicator->setStyleSheet(
             QStringLiteral("background-color: %1; border-radius: 8px; border: 2px solid %2;")
-                .arg(ThemeColors::Dark::statusDisconnected(), ThemeColors::Dark::statusBorder()));
+                .arg(ThemeColors::Current::statusDisconnected(), ThemeColors::Current::statusBorder()));
         ui->statusLabel->setText(tr("未打开"));
     }
 
@@ -970,15 +970,15 @@ void NetworkPanel::appendRecordToReceive(const SerialRecord& record, bool matche
     }
 
     // 颜色
-    QString color = ThemeColors::Dark::rxDefault();
+    QString color = ThemeColors::Current::rxDefault();
     if (record.direction == SerialRecordDirection::Tx) {
-        color = ThemeColors::Dark::txDisplay();
+        color = ThemeColors::Current::txDisplay();
     } else if (!record.error.isEmpty()) {
-        color = ThemeColors::Dark::errorDisplay();
+        color = ThemeColors::Current::errorDisplay();
     } else if (matchedFilter && m_filterEdit && !m_filterEdit->text().trimmed().isEmpty()) {
-        color = ThemeColors::Dark::filterMatch();
+        color = ThemeColors::Current::filterMatch();
     } else if (record.direction == SerialRecordDirection::System) {
-        color = ThemeColors::Dark::systemDisplay();
+        color = ThemeColors::Current::systemDisplay();
     }
 
     ui->rxEdit->append(QStringLiteral("<span style=\"color:%1;\">%2</span>")
@@ -1137,5 +1137,5 @@ void NetworkPanel::handleAutoReply(const SerialRecord& record)
     txRecord.protocol = QStringLiteral("自动回复");
     m_recordStore->addRecord(txRecord);
 
-    appendLine(reply, ThemeColors::Dark::txDisplay());
+    appendLine(reply, ThemeColors::Current::txDisplay());
 }
