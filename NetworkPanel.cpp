@@ -1118,10 +1118,14 @@ void NetworkPanel::handleAutoReply(const SerialRecord& record)
 
     QByteArray data;
     if (result.isHex) {
+        // HEX 格式：直接解析十六进制字符串为字节，不经过编码
         data = QByteArray::fromHex(result.replyText.toLatin1());
     } else {
+        // 文本格式：按指定编码转换
         if (result.encoding == "GBK") {
             data = result.replyText.toLocal8Bit();
+        } else if (result.encoding == "ASCII") {
+            data = result.replyText.toLatin1();
         } else {
             data = result.replyText.toUtf8();
         }

@@ -148,11 +148,17 @@ void AutoReplyDialog::refreshTable()
         hexCheck->setChecked(rule.isHexReply);
         m_ruleTable->setCellWidget(i, 3, hexCheck);
 
-        // 编码
+        // 编码（HEX 模式下禁用）
         auto* encodingCombo = new QComboBox();
-        encodingCombo->addItems({"UTF-8", "GBK"});
+        encodingCombo->addItems({"UTF-8", "GBK", "ASCII"});
         encodingCombo->setCurrentText(rule.encoding);
+        encodingCombo->setEnabled(!rule.isHexReply);
         m_ruleTable->setCellWidget(i, 4, encodingCombo);
+
+        // HEX 勾选时禁用编码列
+        connect(hexCheck, &QCheckBox::toggled, this, [encodingCombo](bool checked) {
+            encodingCombo->setEnabled(!checked);
+        });
 
         // 正则
         auto* regexCheck = new QCheckBox();

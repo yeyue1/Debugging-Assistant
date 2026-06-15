@@ -853,7 +853,7 @@ void SerialPanel::handleAutoReply(const SerialRecord& record)
     QString displayText;
 
     if (result.isHex) {
-        // HEX 格式：直接解析十六进制字符串为字节
+        // HEX 格式：直接解析十六进制字符串为字节，不经过编码
         data = QByteArray::fromHex(result.replyText.toLatin1());
         displayText = result.replyText;
     } else {
@@ -861,7 +861,9 @@ void SerialPanel::handleAutoReply(const SerialRecord& record)
         QString text = result.replyText;
         NewLineHelper::appendNewLine(text, m_newLineMode);
         if (result.encoding == "GBK") {
-            data = text.toLocal8Bit(); // Windows 上 local8Bit 通常是 GBK
+            data = text.toLocal8Bit();
+        } else if (result.encoding == "ASCII") {
+            data = text.toLatin1();
         } else {
             data = text.toUtf8();
         }
