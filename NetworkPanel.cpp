@@ -849,7 +849,9 @@ QByteArray NetworkPanel::encodeSendText(const QString& text, bool* ok) const
         *ok = true;
     }
 
-    if (!ui->hexSendCheck->isChecked()) {
+    // HEX 模式：勾选框或编码下拉选择 HEX 均触发
+    const bool hexMode = ui->hexSendCheck->isChecked() || (currentEncoding() == "HEX");
+    if (!hexMode) {
         return encodeText(text);
     }
 

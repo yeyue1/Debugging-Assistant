@@ -469,6 +469,11 @@
                 <string>ASCII</string>
                </property>
               </item>
+              <item>
+               <property name="text">
+                <string>HEX</string>
+               </property>
+              </item>
              </widget>
             </item>
             <item>

@@ -228,6 +228,7 @@ void SerialPanel::setupUiFromForm()
     ui->encodingCombo->addItem(tr("UTF-8"));
     ui->encodingCombo->addItem(tr("GBK"));
     ui->encodingCombo->addItem(tr("ASCII"));
+    ui->encodingCombo->addItem(tr("HEX"));
 
     // Status indicator initial state
     ui->statusIndicator->setStyleSheet(QStringLiteral("background-color: %1; border-radius: 8px;")
@@ -1363,7 +1364,7 @@ void SerialPanel::onNewLineChanged(int index)
 
 void SerialPanel::onEncodingChanged(int index)
 {
-    QStringList encodings = {"UTF-8", "GBK", "ASCII"};
+    QStringList encodings = {"UTF-8", "GBK", "ASCII", "HEX"};
     if (index >= 0 && index < encodings.size()) {
         m_encoding = encodings[index];
     }

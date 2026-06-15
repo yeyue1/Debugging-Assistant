@@ -22,7 +22,7 @@ inline QString decodeBytes(const QByteArray& data, const QString& encoding)
 }
 
 // 将字符串按指定编码编码为字节数据
-// 支持编码: "GBK"、"ASCII"、其他默认 UTF-8
+// 支持编码: "GBK"、"ASCII"、"HEX"（十六进制字符串→原始字节）、其他默认 UTF-8
 inline QByteArray encodeText(const QString& text, const QString& encoding)
 {
     if (encoding == QStringLiteral("GBK")) {
@@ -30,6 +30,9 @@ inline QByteArray encodeText(const QString& text, const QString& encoding)
     }
     if (encoding == QStringLiteral("ASCII")) {
         return text.toLatin1();
+    }
+    if (encoding == QStringLiteral("HEX")) {
+        return QByteArray::fromHex(text.toLatin1());
     }
     return text.toUtf8();
 }
