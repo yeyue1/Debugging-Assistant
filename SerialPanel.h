@@ -5,7 +5,6 @@
 #include <QByteArray>
 #include <QString>
 #include <QJsonObject>
-#include <QKeyEvent>
 #include <cstdint>
 
 #include "SerialConfig.h"
@@ -28,6 +27,7 @@ class SerialManager;
 class ProtocolParserBase;
 class DeviceRegistry;
 class RecordStore;
+class SearchBarHelper;
 class AutomationRuleEngine;
 class TemplateManager;
 class ParserController;
@@ -43,6 +43,7 @@ public:
 
     QString portName() const;
     bool isConnected() const;
+    AutomationRuleEngine* autoReplyEngine() const { return m_autoReplyEngine; }
     SerialConfig serialConfig() const;
     void setSerialConfig(const SerialConfig& config, bool includePortName = true);
     QJsonObject connectionTemplate() const;
@@ -52,9 +53,6 @@ public:
     void restoreSplitterState(const QByteArray& state);
     void restoreSplitterState();
     QString splitterSettingsKey() const;
-
-protected:
-    void keyPressEvent(QKeyEvent* event) override;
 
 signals:
     void connectionStateChanged(bool connected);
@@ -96,10 +94,6 @@ private slots:
     void onExportConfigTemplateClicked();
     void onImportConfigTemplateClicked();
     void onFilterChanged();
-    void onSearchTextChanged();
-    void onFindNext();
-    void onFindPrevious();
-    void onToggleSearchBar();
     void onAddQueueClicked();
     void onInsertQueueClicked();
     void onRemoveQueueClicked();
@@ -121,7 +115,6 @@ private:
     void setupActionMenus();
     void setupSendPreview();
     void setupSendQueueControls();
-    void setupSearchBar();
     int selectedQueueRow() const;
     void refreshSendQueueTable();
     void updatePortCombo(const QStringList& ports);
@@ -199,21 +192,11 @@ private:
     QLineEdit* m_filterEdit = nullptr;
     QCheckBox* m_filterRegexCheck = nullptr;
     QCheckBox* m_filterHideCheck = nullptr;
-    QCheckBox* m_autoReplyCheck = nullptr;
-    QLineEdit* m_autoReplyPatternEdit = nullptr;
-    QLineEdit* m_autoReplyTextEdit = nullptr;
-    QCheckBox* m_autoReplyRegexCheck = nullptr;
     QTableWidget* m_frameTable = nullptr;
     QTextEdit* m_jsonPreviewEdit = nullptr;
 
-    // Search bar widgets
-    QWidget* m_searchBarWidget = nullptr;
-    QLineEdit* m_searchEdit = nullptr;
-    QCheckBox* m_searchCaseCheck = nullptr;
-    QCheckBox* m_searchRegexCheck = nullptr;
-    QLabel* m_searchCountLabel = nullptr;
-    int m_searchCurrentIndex = 0;
-    int m_searchTotalCount = 0;
+    // Search bar
+    SearchBarHelper* m_searchHelper = nullptr;
 
     // Parsed frame data
     ParsedFrame m_lastParsedFrame;

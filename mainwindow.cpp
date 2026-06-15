@@ -13,6 +13,8 @@
 #include "NetworkPanel.h"
 #include "SerialPanel.h"
 #include "ThemeManager.h"
+#include "AutoReplyDialog.h"
+#include "AutomationRuleEngine.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -61,6 +63,7 @@ void MainWindow::setupConnections()
     connect(ui->darkThemeAction, &QAction::triggered, this, &MainWindow::applyDarkTheme);
     connect(ui->lightThemeAction, &QAction::triggered, this, &MainWindow::applyLightTheme);
     connect(ui->aboutAction, &QAction::triggered, this, &MainWindow::about);
+    connect(ui->autoReplyAction, &QAction::triggered, this, &MainWindow::openAutoReplyDialog);
 
     connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::closeSerialPort);
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged);
@@ -311,4 +314,33 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     saveSettings();
     event->accept();
+}
+
+// ── 自动回复 ──────────────────────────────────────────────────────────────
+
+AutomationRuleEngine* MainWindow::currentPanelAutoReplyEngine() const
+{
+    const int index = ui->tabWidget->currentIndex();
+    if (index < 0) return nullptr;
+
+    QWidget* widget = ui->tabWidget->widget(index);
+    if (auto* sp = qobject_cast<SerialPanel*>(widget)) {
+        return sp->autoReplyEngine();
+    }
+    if (auto* np = qobject_cast<NetworkPanel*>(widget)) {
+        return np->autoReplyEngine();
+    }
+    return nullptr;
+}
+
+void MainWindow::openAutoReplyDialog()
+{
+    AutomationRuleEngine* engine = currentPanelAutoReplyEngine();
+    if (!engine) {
+        QMessageBox::information(this, tr("自动回复"), tr("请先打开一个通信面板。"));
+        return;
+    }
+
+    AutoReplyDialog dialog(engine, this);
+    dialog.exec();
 }

@@ -1,5 +1,6 @@
 #include "SerialPanel.h"
 #include "ui_serialpanel.h"
+#include "SearchBarHelper.h"
 
 #include <QAction>
 #include <QCheckBox>
@@ -85,7 +86,9 @@ SerialPanel::SerialPanel(QWidget* parent)
     setupConnections();
     setupSendPreview();
     setupSendQueueControls();
-    setupSearchBar();
+
+    // 搜索栏（复用 SearchBarHelper）
+    m_searchHelper = new SearchBarHelper(ui->rxEdit, this, this);
 
     refreshPortList();
     m_portScanTimer->setInterval(AppConstants::kPortScanIntervalMs);
@@ -243,10 +246,6 @@ void SerialPanel::bindFeatureUi()
     m_filterEdit = ui->filterEdit;
     m_filterRegexCheck = ui->filterRegexCheck;
     m_filterHideCheck = ui->filterHideCheck;
-    m_autoReplyCheck = ui->autoReplyCheck;
-    m_autoReplyPatternEdit = ui->autoReplyPatternEdit;
-    m_autoReplyTextEdit = ui->autoReplyTextEdit;
-    m_autoReplyRegexCheck = ui->autoReplyRegexCheck;
     m_frameTable = ui->frameTable;
     m_jsonPreviewEdit = ui->jsonPreviewEdit;
 
@@ -294,17 +293,6 @@ void SerialPanel::setupConnections()
     connect(m_filterEdit, &QLineEdit::textChanged, this, &SerialPanel::onFilterChanged);
     connect(m_filterRegexCheck, &QCheckBox::toggled, this, &SerialPanel::onFilterChanged);
     connect(m_filterHideCheck, &QCheckBox::toggled, this, &SerialPanel::onFilterChanged);
-
-    // ── 自动回复 UI → AutomationRuleEngine ──
-    connect(m_autoReplyCheck, &QCheckBox::toggled, this, [this](bool checked) {
-        m_autoReplyEngine->setEnabled(checked);
-    });
-    connect(m_autoReplyPatternEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
-        m_autoReplyEngine->setPattern(text);
-    });
-    connect(m_autoReplyRegexCheck, &QCheckBox::toggled, this, [this](bool checked) {
-        m_autoReplyEngine->setUseRegex(checked);
-    });
 
     // ── 历史双击 ──
     connect(ui->historyList, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* item) {
@@ -458,244 +446,6 @@ void SerialPanel::setupSendQueueControls()
     updateSendQueueStatus(m_sendQueue->pendingItemCount(), m_sendQueue->pendingSendCount(), m_sendQueue->isRunning());
 }
 
-void SerialPanel::setupSearchBar()
-{
-    m_searchBarWidget = new QWidget(this);
-    auto* layout = new QHBoxLayout(m_searchBarWidget);
-    layout->setContentsMargins(4, 2, 4, 2);
-    layout->setSpacing(4);
-
-    auto* searchLabel = new QLabel(tr("查找:"), m_searchBarWidget);
-    layout->addWidget(searchLabel);
-
-    m_searchEdit = new QLineEdit(m_searchBarWidget);
-    m_searchEdit->setPlaceholderText(tr("输入搜索内容..."));
-    m_searchEdit->setMinimumWidth(180);
-    layout->addWidget(m_searchEdit, 1);
-
-    m_searchCaseCheck = new QCheckBox(tr("区分大小写"), m_searchBarWidget);
-    layout->addWidget(m_searchCaseCheck);
-
-    m_searchRegexCheck = new QCheckBox(tr("正则"), m_searchBarWidget);
-    layout->addWidget(m_searchRegexCheck);
-
-    auto* findPrevButton = new QPushButton(tr("上一个"), m_searchBarWidget);
-    layout->addWidget(findPrevButton);
-
-    auto* findNextButton = new QPushButton(tr("下一个"), m_searchBarWidget);
-    layout->addWidget(findNextButton);
-
-    m_searchCountLabel = new QLabel(m_searchBarWidget);
-    m_searchCountLabel->setMinimumWidth(100);
-    layout->addWidget(m_searchCountLabel);
-
-    auto* closeButton = new QPushButton(tr("关闭"), m_searchBarWidget);
-    layout->addWidget(closeButton);
-
-    // Insert search bar between filter layout and rxEdit in the parent layout
-    QBoxLayout* parentLayout = qobject_cast<QBoxLayout*>(ui->rxEdit->parentWidget()->layout());
-    if (parentLayout) {
-        // Find the index of rxEdit in the parent layout and insert before it
-        for (int i = 0; i < parentLayout->count(); ++i) {
-            QLayoutItem* item = parentLayout->itemAt(i);
-            if (item && item->widget() == ui->rxEdit) {
-                parentLayout->insertWidget(i, m_searchBarWidget);
-                break;
-            }
-        }
-    }
-
-    m_searchBarWidget->hide();
-
-    // Connections
-    connect(m_searchEdit, &QLineEdit::textChanged, this, &SerialPanel::onSearchTextChanged);
-    connect(m_searchCaseCheck, &QCheckBox::toggled, this, &SerialPanel::onSearchTextChanged);
-    connect(m_searchRegexCheck, &QCheckBox::toggled, this, &SerialPanel::onSearchTextChanged);
-    connect(findNextButton, &QPushButton::clicked, this, &SerialPanel::onFindNext);
-    connect(findPrevButton, &QPushButton::clicked, this, &SerialPanel::onFindPrevious);
-    connect(closeButton, &QPushButton::clicked, this, &SerialPanel::onToggleSearchBar);
-}
-
-void SerialPanel::onSearchTextChanged()
-{
-    m_searchCurrentIndex = 0;
-    m_searchTotalCount = 0;
-
-    const QString searchText = m_searchEdit->text();
-    if (searchText.isEmpty()) {
-        m_searchCountLabel->clear();
-        return;
-    }
-
-    // Count total matches using QTextDocument::find
-    QTextDocument* doc = ui->rxEdit->document();
-    QTextCursor cursor(doc);
-    cursor.movePosition(QTextCursor::Start);
-
-    QTextDocument::FindFlags flags;
-    if (m_searchCaseCheck->isChecked()) {
-        flags |= QTextDocument::FindCaseSensitively;
-    }
-
-    if (m_searchRegexCheck->isChecked()) {
-        QRegularExpression regex(searchText);
-        if (!regex.isValid()) {
-            m_searchCountLabel->setText(tr("无效正则"));
-            return;
-        }
-        while (true) {
-            QTextCursor match = doc->find(regex, cursor, flags);
-            if (match.isNull()) {
-                break;
-            }
-            ++m_searchTotalCount;
-            cursor = match;
-        }
-    } else {
-        while (true) {
-            QTextCursor match = doc->find(searchText, cursor, flags);
-            if (match.isNull()) {
-                break;
-            }
-            ++m_searchTotalCount;
-            cursor = match;
-        }
-    }
-
-    if (m_searchTotalCount > 0) {
-        m_searchCurrentIndex = 1;
-        m_searchCountLabel->setText(tr("%1 / %2 个匹配").arg(m_searchCurrentIndex).arg(m_searchTotalCount));
-        // Highlight first match
-        onFindNext();
-    } else {
-        m_searchCountLabel->setText(tr("0 个匹配"));
-    }
-}
-
-void SerialPanel::onFindNext()
-{
-    const QString searchText = m_searchEdit->text();
-    if (searchText.isEmpty() || m_searchTotalCount == 0) {
-        return;
-    }
-
-    QTextDocument::FindFlags flags;
-    if (m_searchCaseCheck->isChecked()) {
-        flags |= QTextDocument::FindCaseSensitively;
-    }
-
-    bool found = false;
-    if (m_searchRegexCheck->isChecked()) {
-        QRegularExpression regex(searchText);
-        found = ui->rxEdit->find(regex, flags);
-    } else {
-        found = ui->rxEdit->find(searchText, flags);
-    }
-
-    if (found) {
-        ++m_searchCurrentIndex;
-        if (m_searchCurrentIndex > m_searchTotalCount) {
-            m_searchCurrentIndex = 1;
-        }
-    } else if (m_searchTotalCount > 0) {
-        // Wrap around to beginning
-        QTextCursor cursor = ui->rxEdit->textCursor();
-        cursor.movePosition(QTextCursor::Start);
-        ui->rxEdit->setTextCursor(cursor);
-
-        if (m_searchRegexCheck->isChecked()) {
-            QRegularExpression regex(searchText);
-            found = ui->rxEdit->find(regex, flags);
-        } else {
-            found = ui->rxEdit->find(searchText, flags);
-        }
-
-        if (found) {
-            m_searchCurrentIndex = 1;
-        }
-    }
-
-    if (found) {
-        m_searchCountLabel->setText(tr("%1 / %2 个匹配").arg(m_searchCurrentIndex).arg(m_searchTotalCount));
-    }
-}
-
-void SerialPanel::onFindPrevious()
-{
-    const QString searchText = m_searchEdit->text();
-    if (searchText.isEmpty() || m_searchTotalCount == 0) {
-        return;
-    }
-
-    QTextDocument::FindFlags flags = QTextDocument::FindBackward;
-    if (m_searchCaseCheck->isChecked()) {
-        flags |= QTextDocument::FindCaseSensitively;
-    }
-
-    bool found = false;
-    if (m_searchRegexCheck->isChecked()) {
-        QRegularExpression regex(searchText);
-        found = ui->rxEdit->find(regex, flags);
-    } else {
-        found = ui->rxEdit->find(searchText, flags);
-    }
-
-    if (found) {
-        --m_searchCurrentIndex;
-        if (m_searchCurrentIndex < 1) {
-            m_searchCurrentIndex = m_searchTotalCount;
-        }
-    } else if (m_searchTotalCount > 0) {
-        // Wrap around to end
-        QTextCursor cursor = ui->rxEdit->textCursor();
-        cursor.movePosition(QTextCursor::End);
-        ui->rxEdit->setTextCursor(cursor);
-
-        if (m_searchRegexCheck->isChecked()) {
-            QRegularExpression regex(searchText);
-            found = ui->rxEdit->find(regex, flags);
-        } else {
-            found = ui->rxEdit->find(searchText, flags);
-        }
-
-        if (found) {
-            m_searchCurrentIndex = m_searchTotalCount;
-        }
-    }
-
-    if (found) {
-        m_searchCountLabel->setText(tr("%1 / %2 个匹配").arg(m_searchCurrentIndex).arg(m_searchTotalCount));
-    }
-}
-
-void SerialPanel::onToggleSearchBar()
-{
-    if (!m_searchBarWidget) {
-        return;
-    }
-
-    if (m_searchBarWidget->isVisible()) {
-        m_searchBarWidget->hide();
-        m_searchEdit->clear();
-        m_searchCountLabel->clear();
-        m_searchCurrentIndex = 0;
-        m_searchTotalCount = 0;
-        ui->rxEdit->setFocus();
-    } else {
-        m_searchBarWidget->show();
-        m_searchEdit->setFocus();
-        m_searchEdit->selectAll();
-    }
-}
-
-void SerialPanel::keyPressEvent(QKeyEvent* event)
-{
-    if (event->key() == Qt::Key_F && (event->modifiers() & Qt::ControlModifier)) {
-        onToggleSearchBar();
-        return;
-    }
-    QWidget::keyPressEvent(event);
-}
 
 int SerialPanel::selectedQueueRow() const
 {
@@ -1091,14 +841,10 @@ void SerialPanel::appendRecordToReceive(const SerialRecord& record, bool matched
 
 void SerialPanel::handleAutoReply(const SerialRecord& record)
 {
-    if (!m_autoReplyEngine || !m_autoReplyEngine->shouldAutoReply(record)) {
-        return;
-    }
+    if (!m_autoReplyEngine) return;
 
-    const QString reply = m_autoReplyTextEdit ? m_autoReplyTextEdit->text() : QString();
-    if (reply.isEmpty()) {
-        return;
-    }
+    const QString reply = m_autoReplyEngine->checkAutoReply(record);
+    if (reply.isEmpty()) return;
 
     QString text = reply;
     NewLineHelper::appendNewLine(text, m_newLineMode);

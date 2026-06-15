@@ -1,5 +1,7 @@
 #include "NetworkPanel.h"
 #include "ui_networkpanel.h"
+#include "SearchBarHelper.h"
+#include "AutomationRuleEngine.h"
 
 #include <QAbstractItemView>
 #include <QAction>
@@ -77,6 +79,12 @@ NetworkPanel::NetworkPanel(QWidget* parent)
     setupConnections();
     setupSendPreview();
     setupSendQueueControls();
+
+    // 搜索栏
+    m_searchHelper = new SearchBarHelper(ui->rxEdit, this, this);
+
+    // 自动回复引擎
+    m_autoReplyEngine = new AutomationRuleEngine(this);
 
     restoreSplitterState();
 }
@@ -702,6 +710,7 @@ void NetworkPanel::onDataReceived(const QByteArray& payload, const QString& peer
     record.info = peer;
     m_recordStore->addRecord(record);
     updateStatistics();
+    handleAutoReply(record);
 }
 
 void NetworkPanel::onNetworkError(const QString& message)
@@ -1095,4 +1104,38 @@ void NetworkPanel::restoreSplitterState()
     const QSettings settings(QStringLiteral("yeyue"), QStringLiteral("serial_prot"));
     const QByteArray state = settings.value(splitterSettingsKey()).toByteArray();
     restoreSplitterState(state);
+}
+
+// ── 自动回复 ──────────────────────────────────────────────────────────────
+
+void NetworkPanel::handleAutoReply(const SerialRecord& record)
+{
+    if (!m_autoReplyEngine) return;
+
+    const QString reply = m_autoReplyEngine->checkAutoReply(record);
+    if (reply.isEmpty()) return;
+
+    // 编码并发送
+    bool ok = false;
+    QByteArray data = encodeSendText(reply, &ok);
+    if (!ok || data.isEmpty()) return;
+
+    // 回复到最近来源的 peer
+    const QString peer = record.info;
+    const qint64 written = m_network->sendData(data, peer, 0);
+    if (written > 0) {
+        m_txByteCount += static_cast<uint64_t>(written);
+        updateStatistics();
+    }
+
+    // 记录发送
+    SerialRecord txRecord;
+    txRecord.timestamp = QDateTime::currentDateTime();
+    txRecord.direction = SerialRecordDirection::Tx;
+    txRecord.payload = data;
+    txRecord.text = reply;
+    txRecord.protocol = QStringLiteral("自动回复");
+    m_recordStore->addRecord(txRecord);
+
+    appendLine(reply, ThemeColors::Dark::txDisplay());
 }

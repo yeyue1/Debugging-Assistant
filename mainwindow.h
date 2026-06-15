@@ -6,6 +6,7 @@
 class QActionGroup;
 class SerialPanel;
 class NetworkPanel;
+class AutomationRuleEngine;
 
 namespace Ui { class MainWindow; }
 
@@ -31,6 +32,7 @@ private slots:
     void applyDarkTheme();
     void applyLightTheme();
     void about();
+    void openAutoReplyDialog();
 
 private:
     void setupUiFromForm();
@@ -41,6 +43,7 @@ private:
     bool loadSettings();
     bool loadLegacySerialSettings();
     void saveSettings() const;
+    AutomationRuleEngine* currentPanelAutoReplyEngine() const;
 
     Ui::MainWindow* ui = nullptr;
     QActionGroup* m_themeGroup = nullptr;

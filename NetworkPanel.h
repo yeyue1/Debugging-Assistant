@@ -14,6 +14,8 @@ namespace Ui { class NetworkPanel; }
 
 class NetworkManager;
 class RecordStore;
+class AutomationRuleEngine;
+class SearchBarHelper;
 class QColor;
 class QLabel;
 class QLineEdit;
@@ -34,6 +36,7 @@ public:
 
     bool isConnected() const;
     QString connectionName() const;
+    AutomationRuleEngine* autoReplyEngine() const { return m_autoReplyEngine; }
     NetworkConfig networkConfig() const;
     void setNetworkConfig(const NetworkConfig& config);
 
@@ -74,6 +77,7 @@ private slots:
                               const QString& peer);
     void updateSendQueueStatus(int pendingItems, int pendingSends, bool running);
     void onFilterChanged();
+    void handleAutoReply(const SerialRecord& record);
 
 private:
     void setupUiFromForm();
@@ -108,6 +112,8 @@ private:
     Ui::NetworkPanel* ui = nullptr;
     NetworkManager* m_network = nullptr;
     RecordStore* m_recordStore = nullptr;
+    AutomationRuleEngine* m_autoReplyEngine = nullptr;
+    SearchBarHelper* m_searchHelper = nullptr;
     SendQueue* m_sendQueue = nullptr;
     QTimer* m_timerSendTimer = nullptr;
     QLabel* m_sendPreviewLabel = nullptr;

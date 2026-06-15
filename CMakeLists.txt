@@ -53,6 +53,10 @@ set(PROJECT_SOURCES
         TextDataParser.h
         ThemeManager.cpp
         ThemeManager.h
+        AutoReplyDialog.cpp
+        AutoReplyDialog.h
+        SearchBarHelper.cpp
+        SearchBarHelper.h
         PanelHelper.h
         EncodingCodec.h
         NewLineHelper.h

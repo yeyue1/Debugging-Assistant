@@ -56,6 +56,12 @@
     <addaction name="darkThemeAction"/>
     <addaction name="lightThemeAction"/>
    </widget>
+   <widget class="QMenu" name="menuAutoReply">
+    <property name="title">
+     <string>自动回复(&amp;A)</string>
+    </property>
+    <addaction name="autoReplyAction"/>
+   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>帮助(&amp;H)</string>
@@ -63,6 +69,7 @@
     <addaction name="aboutAction"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuAutoReply"/>
    <addaction name="menuTheme"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -152,6 +159,14 @@
   <action name="aboutAction">
    <property name="text">
     <string>关于(&amp;A)</string>
+   </property>
+  </action>
+  <action name="autoReplyAction">
+   <property name="text">
+    <string>管理规则...</string>
+   </property>
+   <property name="toolTip">
+    <string>管理当前面板的自动回复规则</string>
    </property>
   </action>
  </widget>
