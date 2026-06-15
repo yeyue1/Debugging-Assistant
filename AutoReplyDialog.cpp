@@ -21,6 +21,73 @@ AutoReplyDialog::AutoReplyDialog(AutomationRuleEngine* engine, QWidget* parent)
     setWindowTitle(tr("自动回复规则管理"));
     setMinimumSize(700, 400);
 
+    // 暗色主题适配
+    setStyleSheet(R"(
+        QTableWidget {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            gridline-color: #45475a;
+            border: 1px solid #45475a;
+            selection-background-color: #585b70;
+            font-size: 13px;
+        }
+        QTableWidget::item {
+            padding: 4px;
+        }
+        QTableWidget::item:selected {
+            background-color: #585b70;
+            color: #cdd6f4;
+        }
+        QHeaderView::section {
+            background-color: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            padding: 6px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        QCheckBox {
+            spacing: 6px;
+        }
+        QCheckBox::indicator {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #585b70;
+            border-radius: 3px;
+            background-color: #1e1e2e;
+        }
+        QCheckBox::indicator:checked {
+            background-color: #89b4fa;
+            border-color: #89b4fa;
+        }
+        QSpinBox {
+            background-color: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+        QLabel {
+            color: #cdd6f4;
+            font-size: 13px;
+        }
+        QPushButton {
+            background-color: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+        QPushButton:hover {
+            background-color: #45475a;
+        }
+        QPushButton:pressed {
+            background-color: #585b70;
+        }
+    )");
+
     loadFromEngine();
 
     auto* mainLayout = new QVBoxLayout(this);
