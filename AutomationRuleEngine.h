@@ -17,7 +17,7 @@ struct AutoReplyRule {
     bool isHexReply = false; // 回复内容是否为 HEX 格式
     QString encoding = "UTF-8"; // 回复编码：UTF-8 / GBK
     int cooldownMs = 500;   // 触发冷却（毫秒）
-    int maxTriggerCount = 10; // 最大触发次数（0=不限制）
+    int maxTriggerCount = 0;  // 最大触发次数（0=不限制，无限回复）
     bool onceOnly = false;  // 仅触发一次
 
     // 运行时状态（不序列化）

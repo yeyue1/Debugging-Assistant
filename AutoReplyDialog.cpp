@@ -28,10 +28,10 @@ AutoReplyDialog::AutoReplyDialog(AutomationRuleEngine* engine, QWidget* parent)
 
     // 规则表格
     m_ruleTable = new QTableWidget(this);
-    m_ruleTable->setColumnCount(7);
+    m_ruleTable->setColumnCount(8);
     m_ruleTable->setHorizontalHeaderLabels({
         tr("启用"), tr("匹配模式"), tr("回复内容"),
-        tr("编码"), tr("正则"), tr("冷却(ms)"), tr("最大次数")
+        tr("编码"), tr("正则"), tr("冷却(ms)"), tr("最大次数"), tr("已触发")
     });
     m_ruleTable->horizontalHeader()->setStretchLastSection(true);
     m_ruleTable->setSelectionBehavior(QTableWidget::SelectRows);
@@ -45,6 +45,8 @@ AutoReplyDialog::AutoReplyDialog(AutomationRuleEngine* engine, QWidget* parent)
     m_ruleTable->setColumnWidth(3, 100);
     m_ruleTable->setColumnWidth(4, 50);
     m_ruleTable->setColumnWidth(5, 100);
+    m_ruleTable->setColumnWidth(6, 100);
+    m_ruleTable->setColumnWidth(7, 80);
     mainLayout->addWidget(m_ruleTable);
 
     // 按钮栏
@@ -171,10 +173,16 @@ void AutoReplyDialog::refreshTable()
         m_ruleTable->setCellWidget(i, 5, cooldownSpin);
 
         auto* maxSpin = new QSpinBox();
-        maxSpin->setRange(0, 10000);
+        maxSpin->setRange(0, 99999);
         maxSpin->setValue(rule.maxTriggerCount);
-        maxSpin->setSpecialValueText(tr("不限"));
+        maxSpin->setSpecialValueText(tr("0 = 不限"));
         m_ruleTable->setCellWidget(i, 6, maxSpin);
+
+        // 已触发次数（只读显示）
+        auto* countItem = new QTableWidgetItem(QString::number(rule.triggerCount));
+        countItem->setFlags(countItem->flags() & ~Qt::ItemIsEditable);
+        countItem->setTextAlignment(Qt::AlignCenter);
+        m_ruleTable->setItem(i, 7, countItem);
     }
 }
 
@@ -194,7 +202,7 @@ void AutoReplyDialog::addRule()
     rule.replyText = "OK";
     rule.encoding = "UTF-8";
     rule.cooldownMs = 500;
-    rule.maxTriggerCount = 10;
+    rule.maxTriggerCount = 0;
 
     m_rules.append(rule);
     refreshTable();
