@@ -111,7 +111,8 @@ AutomationRuleEngine::MatchResult AutomationRuleEngine::checkAutoReply(const Ser
 
         // ── 模式匹配 ─────────────────────────────────────────────────
 
-        const QString searchText = RecordStore::recordSearchText(record);
+        // 用原始接收文本做匹配，不用 recordSearchText（后者拼接了所有字段）
+        const QString searchText = record.text;
 
         bool matched = false;
         if (!rule.useRegex) {
