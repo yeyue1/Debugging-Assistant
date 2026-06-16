@@ -68,7 +68,8 @@ private slots:
         engine->setEnabled(true);
         engine->addRule(makeRule("Hello", "Hi there!"));
 
-        SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Hello World");
+        // 精确匹配：必须完全等于 "Hello"
+        SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "Hello");
         QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Hi there!"));
     }
 
@@ -104,10 +105,11 @@ private slots:
         engine->setEnabled(true);
         engine->addRule(makeRule("Data", "OK"));
 
-        SerialRecord txRecord = createTxRecord(QByteArray::fromHex("01"), "Data Sent");
+        SerialRecord txRecord = createTxRecord(QByteArray::fromHex("01"), "Data");
         QVERIFY(engine->checkAutoReply(txRecord).replyText.isEmpty());
 
-        SerialRecord rxRecord = createRxRecord(QByteArray::fromHex("01"), "Data Received");
+        // 精确匹配：必须完全等于 "Data"
+        SerialRecord rxRecord = createRxRecord(QByteArray::fromHex("01"), "Data");
         QCOMPARE(engine->checkAutoReply(rxRecord).replyText, QStringLiteral("OK"));
     }
 
@@ -125,7 +127,7 @@ private slots:
         engine->setEnabled(true);
         engine->addRule(makeRule("hello", "Hi"));
 
-        SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "HELLO World");
+        SerialRecord record = createRxRecord(QByteArray::fromHex("01"), "HELLO");
         QCOMPARE(engine->checkAutoReply(record).replyText, QStringLiteral("Hi"));
     }
 
