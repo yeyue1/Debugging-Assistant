@@ -115,7 +115,8 @@ AutomationRuleEngine::MatchResult AutomationRuleEngine::checkAutoReply(const Ser
 
         bool matched = false;
         if (!rule.useRegex) {
-            matched = searchText.contains(rule.pattern, Qt::CaseInsensitive);
+            // 精确匹配：接收数据必须完全等于模式
+            matched = (searchText.compare(rule.pattern, Qt::CaseInsensitive) == 0);
         } else {
             const QRegularExpression regex(rule.pattern,
                 QRegularExpression::CaseInsensitiveOption);
