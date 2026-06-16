@@ -160,8 +160,15 @@ void NetworkPanel::setupConnections()
 {
     connect(ui->modeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &NetworkPanel::onModeChanged);
-    connect(ui->openButton, &QPushButton::clicked, this, &NetworkPanel::onOpenClicked);
-    connect(ui->closeButton, &QPushButton::clicked, this, &NetworkPanel::onCloseClicked);
+    // 隐藏关闭按钮，用打开按钮做翻转
+    ui->closeButton->hide();
+    connect(ui->openButton, &QPushButton::clicked, this, [this]() {
+        if (m_network && m_network->isOpen()) {
+            onCloseClicked();
+        } else {
+            onOpenClicked();
+        }
+    });
     connect(ui->sendButton, &QPushButton::clicked, this, &NetworkPanel::onSendClicked);
     connect(ui->sendFileButton, &QPushButton::clicked, this, &NetworkPanel::onSendFileClicked);
     connect(ui->saveDataButton, &QPushButton::clicked, this, &NetworkPanel::onSaveDataClicked);
@@ -774,8 +781,15 @@ void NetworkPanel::updateStatusIndicator(bool connected)
         ui->statusLabel->setText(tr("未打开"));
     }
 
-    ui->openButton->setEnabled(!connected);
-    ui->closeButton->setEnabled(connected);
+    if (connected) {
+        ui->openButton->setText(tr("关闭网口"));
+        ui->openButton->setStyleSheet(
+            "background-color: #f38ba8; color: #1e1e2e; font-weight: bold; padding: 6px 20px; border-radius: 4px;");
+    } else {
+        ui->openButton->setText(tr("打开网口"));
+        ui->openButton->setStyleSheet(
+            "background-color: #a6e3a1; color: #1e1e2e; font-weight: bold; padding: 6px 20px; border-radius: 4px;");
+    }
 }
 
 void NetworkPanel::updateStatistics()

@@ -265,8 +265,15 @@ void SerialPanel::bindFeatureUi()
 void SerialPanel::setupConnections()
 {
     // ── UI 按钮 ──
-    connect(ui->openButton, &QPushButton::clicked, this, &SerialPanel::onOpenClicked);
-    connect(ui->closeButton, &QPushButton::clicked, this, &SerialPanel::onCloseClicked);
+    // 隐藏关闭按钮，用打开按钮做翻转
+    ui->closeButton->hide();
+    connect(ui->openButton, &QPushButton::clicked, this, [this]() {
+        if (m_serial && m_serial->isOpen()) {
+            onCloseClicked();
+        } else {
+            onOpenClicked();
+        }
+    });
     connect(ui->sendButton, &QPushButton::clicked, this, &SerialPanel::onSendClicked);
     connect(ui->clearButton, &QPushButton::clicked, this, &SerialPanel::onClearClicked);
     connect(ui->hexCheck, &QCheckBox::toggled, this, &SerialPanel::onHexToggled);
@@ -574,8 +581,15 @@ void SerialPanel::onClosed()
 
 void SerialPanel::setConnectionControls(bool connected)
 {
-    ui->openButton->setEnabled(!connected);
-    ui->closeButton->setEnabled(connected);
+    if (connected) {
+        ui->openButton->setText(tr("关闭串口"));
+        ui->openButton->setStyleSheet(
+            "background-color: #f38ba8; color: #1e1e2e; font-weight: bold; padding: 6px 20px; border-radius: 4px;");
+    } else {
+        ui->openButton->setText(tr("打开串口"));
+        ui->openButton->setStyleSheet(
+            "background-color: #a6e3a1; color: #1e1e2e; font-weight: bold; padding: 6px 20px; border-radius: 4px;");
+    }
     setConfigurationControlsEnabled(!connected);
 }
 
